@@ -23,6 +23,15 @@ export function getAuth() {
     onAPIError: { throw: true },
     trustedOrigins: [env.NEXT_PUBLIC_APP_URL],
     database: drizzleAdapter(db(), { provider: "sqlite" }),
+    user: {
+      additionalFields: {
+        role: {
+          type: "string",
+          defaultValue: "user",
+          input: false,
+        },
+      },
+    },
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: !isPreview,

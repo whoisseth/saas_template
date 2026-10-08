@@ -1,49 +1,53 @@
-import matter from "gray-matter";
+import { repos } from "@/db/repo/d1";
 
 export type Post = {
+  id: string;
   slug: string;
   title: string;
   description?: string;
   publishedAt: string;
-  updatedAt?: string;
+  updatedAt: string;
   author?: string;
+  coverImage?: string;
   content: string;
 };
 
-async function readAll(): Promise<Post[]> {
-  const { readdir, readFile } = await import("node:fs/promises");
-  const path = await import("node:path");
-  const dir = path.join(process.cwd(), "content", "blog");
-  let files: string[] = [];
+export async function getAllPosts(): Promise<Post[]> {
   try {
-    files = await readdir(dir);
-  } catch {
+    const rawDbPosts = await repos.blog.listPublished();
+    return rawDbPosts.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      description: p.description ?? undefined,
+      publishedAt: (p.publishedAt ?? p.createdAt).toISOString(),
+      updatedAt: p.updatedAt.toISOString(),
+      coverImage: p.coverImage ?? undefined,
+      content: p.content,
+    }));
+  } catch (err) {
+    console.error("Error fetching blog posts from D1:", err);
     return [];
   }
-  const posts: Post[] = [];
-  for (const f of files) {
-    if (!f.endsWith(".mdx") && !f.endsWith(".md")) continue;
-    const raw = await readFile(path.join(dir, f), "utf8");
-    const { data, content } = matter(raw);
-    const slug = f.replace(/\.(mdx?|md)$/, "");
-    posts.push({
-      slug,
-      title: data.title ?? slug,
-      description: data.description,
-      publishedAt: data.publishedAt ?? new Date().toISOString(),
-      updatedAt: data.updatedAt,
-      author: data.author,
-      content,
-    });
-  }
-  return posts.sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1));
-}
-
-export async function getAllPosts(): Promise<Post[]> {
-  return readAll();
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const all = await readAll();
-  return all.find((p) => p.slug === slug) ?? null;
+  try {
+    const dbPost = await repos.blog.findBySlug(slug);
+    if (!dbPost || !dbPost.published) return null;
+
+    return {
+      id: dbPost.id,
+      slug: dbPost.slug,
+      title: dbPost.title,
+      description: dbPost.description ?? undefined,
+      publishedAt: (dbPost.publishedAt ?? dbPost.createdAt).toISOString(),
+      updatedAt: dbPost.updatedAt.toISOString(),
+      coverImage: dbPost.coverImage ?? undefined,
+      content: dbPost.content,
+    };
+  } catch (err) {
+    console.error("Error fetching blog post by slug from D1:", err);
+    return null;
+  }
 }

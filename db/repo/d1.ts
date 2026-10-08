@@ -1,7 +1,7 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db as getDb } from "@/lib/db";
-import { user, subscription, entitlement, stripeEvents } from "@/db/schema";
-import type { Repos, UserRepo, BillingRepo, EntitlementRepo } from "./index";
+import { user, subscription, entitlement, stripeEvents, post } from "@/db/schema";
+import type { Repos, UserRepo, BillingRepo, EntitlementRepo, BlogRepo } from "./index";
 
 const users: UserRepo = {
   async findById(id) {
@@ -101,4 +101,41 @@ const entitlements: EntitlementRepo = {
   },
 };
 
-export const repos: Repos = { users, billing, entitlements };
+const blog: BlogRepo = {
+  async findById(id) {
+    const rows = await getDb().select().from(post).where(eq(post.id, id)).limit(1);
+    return rows[0] ?? null;
+  },
+  async findBySlug(slug) {
+    const rows = await getDb().select().from(post).where(eq(post.slug, slug)).limit(1);
+    return rows[0] ?? null;
+  },
+  async listPublished() {
+    return getDb()
+      .select()
+      .from(post)
+      .where(eq(post.published, true))
+      .orderBy(desc(post.publishedAt), desc(post.createdAt));
+  },
+  async listAll() {
+    return getDb().select().from(post).orderBy(desc(post.createdAt));
+  },
+  async create(data) {
+    const rows = await getDb().insert(post).values(data).returning();
+    return rows[0];
+  },
+  async update(id, data) {
+    const rows = await getDb()
+      .update(post)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(post.id, id))
+      .returning();
+    return rows[0] ?? null;
+  },
+  async delete(id) {
+    await getDb().delete(post).where(eq(post.id, id));
+  },
+};
+
+export const repos: Repos = { users, billing, entitlements, blog };
+

@@ -1,11 +1,13 @@
 // Repository interface — isolates D1 so Postgres/Turso can slot in by swapping the impl.
 // See docs/runbooks/d1-escape-hatch.md
 
-import type { user, subscription, entitlement } from "@/db/schema";
+import type { user, subscription, entitlement, post } from "@/db/schema";
 
 type User = typeof user.$inferSelect;
 type Subscription = typeof subscription.$inferSelect;
 type Entitlement = typeof entitlement.$inferSelect;
+export type BlogPost = typeof post.$inferSelect;
+export type NewBlogPost = typeof post.$inferInsert;
 
 export interface UserRepo {
   findById(id: string): Promise<User | null>;
@@ -33,8 +35,19 @@ export interface EntitlementRepo {
   list(userId: string): Promise<Entitlement[]>;
 }
 
+export interface BlogRepo {
+  findById(id: string): Promise<BlogPost | null>;
+  findBySlug(slug: string): Promise<BlogPost | null>;
+  listPublished(): Promise<BlogPost[]>;
+  listAll(): Promise<BlogPost[]>;
+  create(data: NewBlogPost): Promise<BlogPost>;
+  update(id: string, data: Partial<NewBlogPost>): Promise<BlogPost | null>;
+  delete(id: string): Promise<void>;
+}
+
 export interface Repos {
   users: UserRepo;
   billing: BillingRepo;
   entitlements: EntitlementRepo;
+  blog: BlogRepo;
 }

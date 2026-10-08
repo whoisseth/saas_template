@@ -9,6 +9,8 @@ export async function generateStaticParams() {
   return posts.map((p) => ({ slug: p.slug }));
 }
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
@@ -43,16 +45,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           { name: post.title, url },
         ]}
       />
+
+      {post.coverImage && (
+        <div className="mb-8 overflow-hidden rounded-xl border">
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="h-72 w-full object-cover"
+          />
+        </div>
+      )}
+
       <header>
-        <h1 className="text-4xl font-bold">{post.title}</h1>
+        <h1 className="text-4xl font-bold tracking-tight">{post.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           <time dateTime={post.publishedAt}>{new Date(post.publishedAt).toLocaleDateString()}</time>
           {post.author && <> · {post.author}</>}
         </p>
       </header>
-      <div className="prose mt-8 max-w-none dark:prose-invert">
-        <pre className="whitespace-pre-wrap">{post.content}</pre>
-      </div>
+      <div
+        className="blog-content mt-8"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
     </article>
   );
 }
