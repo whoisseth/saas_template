@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
 import { repos } from "@/db/repo/d1";
-import { isAdmin } from "@/lib/admin";
+import { canManageBlog, resolveUser } from "@/lib/admin";
 import { postUpdateSchema } from "@/lib/blog-schema";
 
 export async function GET(
@@ -16,9 +16,10 @@ export async function GET(
   }
 
   const session = await getAuth().api.getSession({ headers: await headers() });
-  const userIsAdmin = session ? isAdmin(session.user) : false;
+  const user = await resolveUser(session?.user);
+  const userCanManage = user ? canManageBlog(user) : false;
 
-  if (!post.published && !userIsAdmin) {
+  if (!post.published && !userCanManage) {
     return new Response(JSON.stringify({ error: "Post not found" }), { status: 404 });
   }
 
@@ -34,8 +35,9 @@ export async function PATCH(
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  if (!isAdmin(session.user)) {
-    return new Response(JSON.stringify({ error: "Forbidden: Admins only" }), { status: 403 });
+  const user = await resolveUser(session.user);
+  if (!canManageBlog(user)) {
+    return new Response(JSON.stringify({ error: "Forbidden: Editors and Admins only" }), { status: 403 });
   }
 
   const { id } = await params;
@@ -85,8 +87,9 @@ export async function DELETE(
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  if (!isAdmin(session.user)) {
-    return new Response(JSON.stringify({ error: "Forbidden: Admins only" }), { status: 403 });
+  const user = await resolveUser(session.user);
+  if (!canManageBlog(user)) {
+    return new Response(JSON.stringify({ error: "Forbidden: Editors and Admins only" }), { status: 403 });
   }
 
   const { id } = await params;

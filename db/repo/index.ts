@@ -12,6 +12,8 @@ export type NewBlogPost = typeof post.$inferInsert;
 export interface UserRepo {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  list(): Promise<User[]>;
+  updateRole(userId: string, role: string): Promise<void>;
   setStripeCustomerId(userId: string, stripeCustomerId: string): Promise<void>;
   softDelete(userId: string): Promise<void>;
 }

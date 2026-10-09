@@ -14,6 +14,8 @@ const shared = (extra: Policy = {}): Policy => ({
   "font-src": ["'self'", "data:"],
   "connect-src": [
     "'self'",
+    "https://api.cloudinary.com",
+    "https://*.cloudinary.com",
     "https://*.posthog.com",
     "https://www.google-analytics.com",
     "https://region1.google-analytics.com",

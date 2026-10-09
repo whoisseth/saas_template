@@ -1,12 +1,13 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuth } from "@/lib/auth";
-import { isAdmin } from "@/lib/admin";
+import { canManageBlog, resolveUser } from "@/lib/admin";
 import { BlogPostForm } from "@/components/blog/blog-post-form";
 
 export default async function NewPostPage() {
   const session = await getAuth().api.getSession({ headers: await headers() });
-  if (!session || !isAdmin(session.user)) {
+  const user = await resolveUser(session?.user);
+  if (!user || !canManageBlog(user)) {
     redirect("/dashboard/blog");
   }
 

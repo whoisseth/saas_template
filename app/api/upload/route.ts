@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
 import { cfEnv } from "@/lib/cf";
-import { isAdmin } from "@/lib/admin";
+import { canManageBlog, resolveUser } from "@/lib/admin";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = new Set([
@@ -26,8 +26,9 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
 
-  if (!isAdmin(session.user)) {
-    return new Response(JSON.stringify({ error: "Forbidden: Admins only" }), { status: 403 });
+  const user = await resolveUser(session.user);
+  if (!canManageBlog(user)) {
+    return new Response(JSON.stringify({ error: "Forbidden: Admins or editors only" }), { status: 403 });
   }
 
   const formData = await req.formData();

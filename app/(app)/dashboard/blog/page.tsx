@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
 import { repos } from "@/db/repo/d1";
-import { isAdmin } from "@/lib/admin";
+import { canManageBlog, resolveUser } from "@/lib/admin";
 import Link from "next/link";
 import { Plus, Edit, Eye, ShieldAlert } from "lucide-react";
 import { DeletePostButton } from "@/components/blog/delete-post-button";
@@ -10,17 +10,18 @@ import { formatDate } from "@/lib/utils";
 
 export default async function BlogAdminPage() {
   const session = await getAuth().api.getSession({ headers: await headers() });
-  const userIsAdmin = session ? isAdmin(session.user) : false;
+  const user = await resolveUser(session?.user);
+  const hasAccess = user ? canManageBlog(user) : false;
 
-  if (!userIsAdmin) {
+  if (!hasAccess) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
           <ShieldAlert className="h-6 w-6" />
         </div>
-        <h1 className="mt-4 text-xl font-bold">Admin Access Required</h1>
+        <h1 className="mt-4 text-xl font-bold">Access Restricted</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Only administrators can access the blog management system.
+          Only administrators and editors can access the blog management system.
         </p>
         <Link
           href="/dashboard"

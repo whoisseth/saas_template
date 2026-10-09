@@ -12,6 +12,12 @@ const users: UserRepo = {
     const rows = await getDb().select().from(user).where(eq(user.email, email)).limit(1);
     return rows[0] ?? null;
   },
+  async list() {
+    return await getDb().select().from(user).orderBy(desc(user.createdAt));
+  },
+  async updateRole(userId, role) {
+    await getDb().update(user).set({ role, updatedAt: new Date() }).where(eq(user.id, userId));
+  },
   async setStripeCustomerId(userId, stripeCustomerId) {
     await getDb().update(user).set({ stripeCustomerId, updatedAt: new Date() }).where(eq(user.id, userId));
   },

@@ -49,6 +49,8 @@ name = "saas-template-preview"
 NEXT_PUBLIC_APP_URL = "https://preview.example.com"
 NEXT_PUBLIC_IS_PREVIEW = "true"
 BETTER_AUTH_RP_ID = "preview.example.com"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
 
 [[env.preview.d1_databases]]
 binding = "DB"

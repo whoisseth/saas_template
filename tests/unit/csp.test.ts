@@ -15,6 +15,11 @@ describe("csp", () => {
     expect(csp).toContain("'strict-dynamic'");
   });
 
+  it("CSP allows api.cloudinary.com for client image uploads", () => {
+    expect(staticMarketingCsp()).toContain("https://api.cloudinary.com");
+    expect(dynamicAppCsp("abc123")).toContain("https://api.cloudinary.com");
+  });
+
   it("security headers include HSTS and X-Frame-Options DENY", () => {
     expect(securityHeaders["Strict-Transport-Security"]).toMatch(/max-age=/);
     expect(securityHeaders["X-Frame-Options"]).toBe("DENY");
