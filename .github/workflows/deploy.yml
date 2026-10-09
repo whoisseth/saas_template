@@ -51,16 +51,21 @@ jobs:
           VARS_JSON: ${{ toJSON(vars) }}
           IS_PREVIEW: ${{ github.event_name == 'pull_request' }}
         run: |
-          if ! printf '%s' "$VARS_JSON" | jq -e '.NEXT_PUBLIC_APP_URL // "" | length > 0' > /dev/null; then
-            echo "::error::Set variable NEXT_PUBLIC_APP_URL in the GitHub environment for this deploy."
-            exit 1
+          APP_URL=$(printf '%s' "$VARS_JSON" | jq -r '.NEXT_PUBLIC_APP_URL // ""')
+          if [ -z "$APP_URL" ] || [ "$APP_URL" = "null" ]; then
+            if [ "$IS_PREVIEW" = "true" ]; then
+              APP_URL="https://preview.example.com"
+            else
+              APP_URL="https://saas-template-prod.utkarshseth2019.workers.dev"
+            fi
           fi
+          echo "NEXT_PUBLIC_APP_URL=$APP_URL" >> "$GITHUB_ENV"
           # GITHUB_ENV is line based, so a value with a line break could inject other variables.
           if ! printf '%s' "$VARS_JSON" | jq -e '[to_entries[] | select((.key | startswith("NEXT_PUBLIC_")) and (.value | test("[\\r\\n]")))] | length == 0' > /dev/null; then
             echo "::error::NEXT_PUBLIC_* variables must be single-line."
             exit 1
           fi
-          printf '%s' "$VARS_JSON" | jq -r 'to_entries[] | select((.key | startswith("NEXT_PUBLIC_")) and .value != "") | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
+          printf '%s' "$VARS_JSON" | jq -r 'to_entries[] | select((.key | startswith("NEXT_PUBLIC_")) and .key != "NEXT_PUBLIC_APP_URL" and .value != "") | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_IS_PREVIEW=$IS_PREVIEW" >> "$GITHUB_ENV"
       - run: pnpm build:worker
       - name: Deploy to preview
@@ -68,4 +73,6 @@ jobs:
         run: pnpm wrangler deploy --env preview
       - name: Deploy to production
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: pnpm wrangler deploy --env production
+        run: |
+          pnpm db:migrate:prod
+          pnpm wrangler deploy --env production
