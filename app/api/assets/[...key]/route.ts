@@ -9,6 +9,9 @@ export async function GET(
 
   try {
     const { UPLOADS } = cfEnv();
+    if (!UPLOADS) {
+      return new Response("Not found", { status: 404 });
+    }
     const object = await UPLOADS.get(fullKey);
 
     if (!object) {

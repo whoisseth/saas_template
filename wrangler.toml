@@ -11,34 +11,32 @@ NEXT_PUBLIC_APP_URL = "http://localhost:3000"
 NEXT_PUBLIC_APP_NAME = "SaaS Template"
 NEXT_PUBLIC_IS_PREVIEW = "false"
 BETTER_AUTH_RP_ID = "localhost"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "saas_db"
-database_id = "REPLACE_AFTER_WRANGLER_D1_CREATE"
+database_id = "64fa4384-d1e9-4106-a6ad-b7231068d7be"
 migrations_dir = "db/migrations"
 
-[[r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "saas-uploads"
-
-[[r2_buckets]]
-binding = "NEXT_INC_CACHE_R2_BUCKET"
-bucket_name = "saas-next-cache"
+[[kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "75c9dc013e584c1c8d774fd3a26c1232"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_AFTER_WRANGLER_KV_CREATE"
+id = "0c362b44c7c94e8faf7c676918bb8c2a"
 
 [[queues.producers]]
 binding = "JOBS"
 queue = "saas-jobs"
 
-[[queues.consumers]]
-queue = "saas-jobs"
-max_batch_size = 10
-max_batch_timeout = 5
-dead_letter_queue = "saas-jobs-dlq"
+# [[queues.consumers]]
+# queue = "saas-jobs"
+# max_batch_size = 10
+# max_batch_timeout = 5
+# dead_letter_queue = "saas-jobs-dlq"
 
 [observability]
 enabled = true
@@ -81,35 +79,34 @@ dead_letter_queue = "saas-jobs-preview-dlq"
 # ===== Production =====
 [env.production]
 name = "saas-template-prod"
-routes = [{ pattern = "example.com/*", zone_name = "example.com" }]
+workers_dev = true
 
 [env.production.vars]
-NEXT_PUBLIC_APP_URL = "https://example.com"
+NEXT_PUBLIC_APP_NAME = "SaaS Template"
+NEXT_PUBLIC_APP_URL = "https://saas-template-prod.utkarshseth2019.workers.dev"
 NEXT_PUBLIC_IS_PREVIEW = "false"
-BETTER_AUTH_RP_ID = "example.com"
+BETTER_AUTH_RP_ID = "utkarshseth2019.workers.dev"
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "saas_db"
-database_id = "REPLACE_ME"
+database_id = "64fa4384-d1e9-4106-a6ad-b7231068d7be"
 migrations_dir = "db/migrations"
 
-[[env.production.r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "saas-uploads"
-
-[[env.production.r2_buckets]]
-binding = "NEXT_INC_CACHE_R2_BUCKET"
-bucket_name = "saas-next-cache"
+[[env.production.kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "75c9dc013e584c1c8d774fd3a26c1232"
 
 [[env.production.kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_ME"
+id = "0c362b44c7c94e8faf7c676918bb8c2a"
 
 [[env.production.queues.producers]]
 binding = "JOBS"
 queue = "saas-jobs"
 
-[[env.production.queues.consumers]]
-queue = "saas-jobs"
-dead_letter_queue = "saas-jobs-dlq"
+# [[env.production.queues.consumers]]
+# queue = "saas-jobs"
+# dead_letter_queue = "saas-jobs-dlq"

@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, X, Loader2, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 interface CoverImageUploaderProps {
   value?: string | null;
@@ -22,21 +23,12 @@ export function CoverImageUploader({ value, onChange }: CoverImageUploaderProps)
     setUploading(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const url = await uploadToCloudinary(file, {
+        folder: "my-saas/blog",
+        tags: ["my-saas", "blog"],
       });
-
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Upload failed");
-      }
-
-      onChange(data.url);
+      onChange(url);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to upload image");
     } finally {
@@ -103,7 +95,7 @@ export function CoverImageUploader({ value, onChange }: CoverImageUploaderProps)
                 ) : (
                   <>
                     <Upload className="h-3.5 w-3.5" />
-                    <span>Upload to Cloudflare R2</span>
+                    <span>Upload Image</span>
                   </>
                 )}
               </label>

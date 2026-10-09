@@ -21,9 +21,11 @@ export async function POST(req: Request) {
 
   const key = `exports/${session.user.id}-${Date.now()}.json`;
   const { UPLOADS } = cfEnv();
-  await UPLOADS.put(key, JSON.stringify(payload, null, 2), {
-    httpMetadata: { contentType: "application/json" },
-  });
+  if (UPLOADS) {
+    await UPLOADS.put(key, JSON.stringify(payload, null, 2), {
+      httpMetadata: { contentType: "application/json" },
+    });
+  }
 
   log.info("account_export_created", { userId: session.user.id, key });
   return NextResponse.json({ key, message: "Export created. Contact support for a signed URL or integrate R2 presigning." });

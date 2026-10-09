@@ -6,7 +6,9 @@ initOpenNextCloudflareForDev();
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  serverExternalPackages: ["sharp"],
   images: {
+    unoptimized: true,
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   async redirects() {

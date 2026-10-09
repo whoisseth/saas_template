@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { useState, useRef } from "react";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import {
   Bold,
   Italic,
@@ -75,22 +76,13 @@ export function TiptapEditor({ content, onChange }: TiptapEditorProps) {
     setUploading(true);
     setUploadError(null);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      const url = await uploadToCloudinary(file, {
+        folder: "my-saas/blog-content",
+        tags: ["my-saas", "blog"],
       });
 
-      const data = (await res.json()) as { url?: string; error?: string };
-
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "Upload failed");
-      }
-
-      editor?.chain().focus().setImage({ src: data.url }).run();
+      editor?.chain().focus().setImage({ src: url }).run();
       setShowImageModal(false);
       setImageUrl("");
     } catch (err: unknown) {

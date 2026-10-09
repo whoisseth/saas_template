@@ -56,6 +56,9 @@ export async function POST(req: Request) {
 
   try {
     const { UPLOADS } = cfEnv();
+    if (!UPLOADS) {
+      return new Response(JSON.stringify({ error: "Direct R2 storage disabled. Use Cloudinary." }), { status: 501 });
+    }
     const buffer = await file.arrayBuffer();
     await UPLOADS.put(key, buffer, {
       httpMetadata: { contentType: file.type },
