@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate --config db/drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config db/drizzle.local.config.ts",
     "db:migrate:local": "wrangler d1 migrations apply saas_db --local",
     "db:migrate:preview": "wrangler d1 migrations apply saas_db_preview --env preview --remote",
     "db:migrate:prod": "wrangler d1 migrations apply saas_db --env production --remote",
@@ -51,6 +52,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@libsql/client": "^0.18.0",
     "@playwright/test": "^1.50.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.0",
