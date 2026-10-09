@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "pnpm cf-typegen && next build",
-    "build:worker": "opennextjs-cloudflare build",
+    "build:worker": "node patch-opennext.cjs && opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && wrangler deploy --env production",
     "deploy:preview": "opennextjs-cloudflare build && wrangler deploy --env preview",
