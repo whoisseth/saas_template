@@ -79,7 +79,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: pnpm wrangler deploy --env preview
       - name: Deploy to production
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           pnpm db:migrate:prod
           pnpm wrangler deploy --env production
