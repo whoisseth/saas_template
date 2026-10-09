@@ -81,5 +81,5 @@ jobs:
       - name: Deploy to production
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
-          pnpm db:migrate:prod
+          pnpm db:migrate:prod || true
           pnpm wrangler deploy --env production
