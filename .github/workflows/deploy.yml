@@ -42,6 +42,12 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
+      - name: Sanitize Cloudflare credentials
+        run: |
+          ACCOUNT_ID=$(printf '%s' "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" | tr -d '[:space:]')
+          API_TOKEN=$(printf '%s' "${{ secrets.CLOUDFLARE_API_TOKEN }}" | tr -d '[:space:]')
+          echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_API_TOKEN=$API_TOKEN" >> "$GITHUB_ENV"
       # pnpm version comes from the packageManager field in package.json.
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
