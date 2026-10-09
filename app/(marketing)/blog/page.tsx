@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllPosts } from "@/lib/blog";
+import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -27,7 +28,7 @@ export default async function BlogIndexPage() {
                 <div>
                   <h2 className="text-2xl font-semibold group-hover:underline">{p.title}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    <time dateTime={p.publishedAt}>{new Date(p.publishedAt).toLocaleDateString()}</time>
+                    <time dateTime={p.publishedAt}>{formatDate(p.publishedAt)}</time>
                   </p>
                   {p.description && <p className="mt-2 text-muted-foreground text-sm line-clamp-2">{p.description}</p>}
                 </div>

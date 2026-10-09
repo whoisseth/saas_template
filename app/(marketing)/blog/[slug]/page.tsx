@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
+import { formatDate } from "@/lib/utils";
 
 export async function generateStaticParams() {
   const posts = await getAllPosts();
@@ -59,7 +60,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       <header>
         <h1 className="text-4xl font-bold tracking-tight">{post.title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          <time dateTime={post.publishedAt}>{new Date(post.publishedAt).toLocaleDateString()}</time>
+          <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
           {post.author && <> · {post.author}</>}
         </p>
       </header>

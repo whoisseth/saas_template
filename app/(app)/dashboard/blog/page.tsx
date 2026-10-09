@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Plus, Edit, Eye, ShieldAlert } from "lucide-react";
 import { DeletePostButton } from "@/components/blog/delete-post-button";
 import { TogglePublishButton } from "@/components/blog/toggle-publish-button";
+import { formatDate } from "@/lib/utils";
 
 export default async function BlogAdminPage() {
   const session = await getAuth().api.getSession({ headers: await headers() });
@@ -90,7 +91,7 @@ export default async function BlogAdminPage() {
                       <span>•</span>
                       <span>/blog/{p.slug}</span>
                       <span>•</span>
-                      <span>{new Date(p.createdAt).toLocaleDateString()}</span>
+                      <span>{formatDate(p.createdAt)}</span>
                     </div>
                   </div>
                 </div>

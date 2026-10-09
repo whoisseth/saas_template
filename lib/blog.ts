@@ -12,6 +12,13 @@ export type Post = {
   content: string;
 };
 
+function toSafeIsoString(date: Date): string {
+  if (date.getFullYear() > 3000) {
+    return new Date(date.getTime() / 1000).toISOString();
+  }
+  return date.toISOString();
+}
+
 export async function getAllPosts(): Promise<Post[]> {
   try {
     const rawDbPosts = await repos.blog.listPublished();
@@ -20,8 +27,8 @@ export async function getAllPosts(): Promise<Post[]> {
       slug: p.slug,
       title: p.title,
       description: p.description ?? undefined,
-      publishedAt: (p.publishedAt ?? p.createdAt).toISOString(),
-      updatedAt: p.updatedAt.toISOString(),
+      publishedAt: toSafeIsoString(p.publishedAt ?? p.createdAt),
+      updatedAt: toSafeIsoString(p.updatedAt),
       coverImage: p.coverImage ?? undefined,
       content: p.content,
     }));
@@ -41,8 +48,8 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
       slug: dbPost.slug,
       title: dbPost.title,
       description: dbPost.description ?? undefined,
-      publishedAt: (dbPost.publishedAt ?? dbPost.createdAt).toISOString(),
-      updatedAt: dbPost.updatedAt.toISOString(),
+      publishedAt: toSafeIsoString(dbPost.publishedAt ?? dbPost.createdAt),
+      updatedAt: toSafeIsoString(dbPost.updatedAt),
       coverImage: dbPost.coverImage ?? undefined,
       content: dbPost.content,
     };
