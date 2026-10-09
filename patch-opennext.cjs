@@ -14,7 +14,7 @@ if (fs.existsSync(bundleServerPattern)) {
   }
 }
 
-// 2. Patch next-server.js to avoid dynamic require of middleware-manifest.json
+// 2. Patch next-server.js to safely try-catch dynamic require of middleware-manifest.json
 function findFiles(dir, matchFileName, results = []) {
   if (!fs.existsSync(dir)) return results;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -31,17 +31,26 @@ function findFiles(dir, matchFileName, results = []) {
   return results;
 }
 
+const safeManifestCode = `let manifest = null;
+            try {
+                manifest = require(this.middlewareManifestPath);
+            } catch {}
+            return manifest;`;
+
 const nextServerFiles = findFiles(path.resolve('node_modules'), 'next-server.js');
 for (const file of nextServerFiles) {
   if (file.includes(path.join('dist', 'server', 'next-server.js'))) {
     let content = fs.readFileSync(file, 'utf8');
-    const target = 'const manifest = require(this.middlewareManifestPath);';
-    if (content.includes(target)) {
-      content = content.replace(target, 'const manifest = null;');
+    if (content.includes('const manifest = null;\n            return manifest;')) {
+      content = content.replace('const manifest = null;\n            return manifest;', safeManifestCode);
       fs.writeFileSync(file, content);
-      console.log('Patched getMiddlewareManifest in:', file);
-    } else if (content.includes('const manifest = null;')) {
-      console.log('Already patched:', file);
+      console.log('Updated getMiddlewareManifest with safe try-catch in:', file);
+    } else if (content.includes('const manifest = require(this.middlewareManifestPath);\n            return manifest;')) {
+      content = content.replace('const manifest = require(this.middlewareManifestPath);\n            return manifest;', safeManifestCode);
+      fs.writeFileSync(file, content);
+      console.log('Patched getMiddlewareManifest with safe try-catch in:', file);
+    } else {
+      console.log('Already has safe getMiddlewareManifest in:', file);
     }
   }
 }
