@@ -5,23 +5,54 @@ import { twoFactor } from "better-auth/plugins/two-factor";
 import { magicLink } from "better-auth/plugins";
 import { db } from "./db";
 import { env } from "./env";
+import { cfEnv } from "./cf";
 import { describeError, log, logBetterAuthEvent } from "./logger";
 import { sendMagicLinkEmail, sendVerifyEmail, sendResetEmail } from "./resend";
 
-const isPreview = env.NEXT_PUBLIC_IS_PREVIEW;
-const baseURL = env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL;
+function getRuntimeAuthEnv() {
+  try {
+    const cf = cfEnv();
+    if (cf) {
+      return {
+        appUrl: cf.NEXT_PUBLIC_APP_URL || env.NEXT_PUBLIC_APP_URL,
+        authUrl: cf.BETTER_AUTH_URL || cf.NEXT_PUBLIC_APP_URL || env.BETTER_AUTH_URL || env.NEXT_PUBLIC_APP_URL,
+        authSecret: cf.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET,
+        rpId: cf.BETTER_AUTH_RP_ID || env.BETTER_AUTH_RP_ID,
+        appName: cf.NEXT_PUBLIC_APP_NAME || env.NEXT_PUBLIC_APP_NAME,
+        isPreview: cf.NEXT_PUBLIC_IS_PREVIEW === "true",
+        googleClientId: cf.GOOGLE_CLIENT_ID || env.GOOGLE_CLIENT_ID,
+        googleClientSecret: cf.GOOGLE_CLIENT_SECRET || env.GOOGLE_CLIENT_SECRET,
+      };
+    }
+  } catch {
+    // Outside Cloudflare context (e.g. tests or build time)
+  }
+  return {
+    appUrl: env.NEXT_PUBLIC_APP_URL,
+    authUrl: env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL,
+    authSecret: env.BETTER_AUTH_SECRET,
+    rpId: env.BETTER_AUTH_RP_ID,
+    appName: env.NEXT_PUBLIC_APP_NAME,
+    isPreview: Boolean(env.NEXT_PUBLIC_IS_PREVIEW),
+    googleClientId: env.GOOGLE_CLIENT_ID,
+    googleClientSecret: env.GOOGLE_CLIENT_SECRET,
+  };
+}
 
 // Built per call, never at module load: the D1 binding only exists inside a request
 // (getCloudflareContext), and `next build` evaluates route modules outside of one.
 export function getAuth() {
+  const runtime = getRuntimeAuthEnv();
+  const baseURL = runtime.authUrl;
+
   return betterAuth({
     baseURL,
-    secret: env.BETTER_AUTH_SECRET,
+    secret: runtime.authSecret,
     logger: { log: logBetterAuthEvent },
     // Unexpected (non-API) errors are rethrown to handleAuthRequest; otherwise better-call prints them
     // raw with console.error, and drizzle query errors carry bound values such as tokens.
     onAPIError: { throw: true },
-    trustedOrigins: [env.NEXT_PUBLIC_APP_URL],
+    trustedOrigins: [runtime.appUrl],
     database: drizzleAdapter(db(), { provider: "sqlite" }),
     user: {
       additionalFields: {
@@ -34,7 +65,7 @@ export function getAuth() {
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: !isPreview,
+      requireEmailVerification: !runtime.isPreview,
       sendResetPassword: async ({ user, url }) => {
         await sendResetEmail(user.email, url);
       },
@@ -44,14 +75,15 @@ export function getAuth() {
         await sendVerifyEmail(user.email, url);
       },
     },
-    socialProviders: env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-      ? {
-          google: {
-            clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET,
-          },
-        }
-      : undefined,
+    socialProviders:
+      runtime.googleClientId && runtime.googleClientSecret
+        ? {
+            google: {
+              clientId: runtime.googleClientId,
+              clientSecret: runtime.googleClientSecret,
+            },
+          }
+        : undefined,
     session: {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
@@ -59,13 +91,13 @@ export function getAuth() {
     },
     advanced: {
       cookiePrefix: "saas",
-      useSecureCookies: !isPreview && env.NEXT_PUBLIC_APP_URL.startsWith("https://"),
+      useSecureCookies: !runtime.isPreview && runtime.appUrl.startsWith("https://"),
     },
     plugins: [
       passkey({
-        rpID: env.BETTER_AUTH_RP_ID,
-        rpName: env.NEXT_PUBLIC_APP_NAME,
-        origin: env.NEXT_PUBLIC_APP_URL,
+        rpID: runtime.rpId,
+        rpName: runtime.appName,
+        origin: runtime.appUrl,
       }),
       twoFactor(),
       magicLink({

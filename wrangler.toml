@@ -88,6 +88,7 @@ NEXT_PUBLIC_IS_PREVIEW = "false"
 BETTER_AUTH_RP_ID = "utkarshseth2019.workers.dev"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
+GOOGLE_CLIENT_ID = "212342242306-71l03g04pq683jjgqpjv0jr7ieulvfeg.apps.googleusercontent.com"
 
 [[env.production.d1_databases]]
 binding = "DB"
