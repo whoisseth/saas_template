@@ -4,7 +4,14 @@ import { Analytics } from "@/components/analytics";
 import { ConsentBanner } from "@/components/consent-banner";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/json-ld";
 import { env } from "@/lib/env";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+
+const sansFont = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 const APP_URL = env.NEXT_PUBLIC_APP_URL;
 const APP_NAME = env.NEXT_PUBLIC_APP_NAME;
@@ -35,8 +42,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen antialiased">
+    <html lang="en" className={sansFont.variable} suppressHydrationWarning>
+      <body className={`${sansFont.variable} min-h-screen font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light">
           {children}
           <ConsentBanner />
