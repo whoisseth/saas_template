@@ -57,8 +57,8 @@ GOOGLE_CLIENT_ID = "212342242306-71l03g04pq683jjgqpjv0jr7ieulvfeg.apps.googleuse
 
 [[env.preview.d1_databases]]
 binding = "DB"
-database_name = "saas_db_preview"
-database_id = "1405c8f5-5ee5-43ee-959f-7ba31ec4d8ad"
+database_name = "saas_db"
+database_id = "64fa4384-d1e9-4106-a6ad-b7231068d7be"
 migrations_dir = "db/migrations"
 
 [[env.preview.kv_namespaces]]
