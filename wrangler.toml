@@ -47,37 +47,31 @@ name = "saas-template-preview"
 workers_dev = true
 
 [env.preview.vars]
+NEXT_PUBLIC_APP_NAME = "SaaS Template (Preview)"
 NEXT_PUBLIC_APP_URL = "https://saas-template-preview.whoisseth.workers.dev"
 NEXT_PUBLIC_IS_PREVIEW = "true"
 BETTER_AUTH_RP_ID = "whoisseth.workers.dev"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
+GOOGLE_CLIENT_ID = "212342242306-71l03g04pq683jjgqpjv0jr7ieulvfeg.apps.googleusercontent.com"
 
 [[env.preview.d1_databases]]
 binding = "DB"
 database_name = "saas_db_preview"
-database_id = "REPLACE_ME"
+database_id = "1405c8f5-5ee5-43ee-959f-7ba31ec4d8ad"
 migrations_dir = "db/migrations"
 
-[[env.preview.r2_buckets]]
-binding = "UPLOADS"
-bucket_name = "saas-uploads-preview"
-
-[[env.preview.r2_buckets]]
-binding = "NEXT_INC_CACHE_R2_BUCKET"
-bucket_name = "saas-next-cache-preview"
+[[env.preview.kv_namespaces]]
+binding = "NEXT_INC_CACHE_KV"
+id = "b64ce12660154fc1a475fa7a3aa4d09d"
 
 [[env.preview.kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_ME"
+id = "3c13c280c79c44ccbc12d128d7170881"
 
 [[env.preview.queues.producers]]
 binding = "JOBS"
 queue = "saas-jobs-preview"
-
-[[env.preview.queues.consumers]]
-queue = "saas-jobs-preview"
-dead_letter_queue = "saas-jobs-preview-dlq"
 
 # ===== Production =====
 [env.production]
