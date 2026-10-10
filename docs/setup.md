@@ -70,25 +70,28 @@ pnpm lint        # runs ESLint
 pnpm test        # runs Vitest unit tests
 ```
 
-## 7. Automated Push-to-Deploy (GitHub Actions)
-Whenever you push to the `main` branch, `.github/workflows/deploy.yml` automatically tests, builds, runs pending D1 migrations, and deploys to Cloudflare.
+## 7. Branch-Based Automated Deployment (GitHub Actions)
+The repository uses an automated two-tier deployment architecture:
+- **`preview` Branch (Staging/Testing):** Pushing to `preview` (or opening a PR to `main`) automatically tests, builds, applies preview DB migrations, and deploys to:
+  👉 `https://saas-template-preview.whoisseth.workers.dev`
+- **`main` Branch (Production):** Merging or pushing to `main` automatically deploys to:
+  👉 `https://saas-template-prod.whoisseth.workers.dev`
 
-To enable this on a newly cloned repository:
-1. In Cloudflare Dashboard, go to **My Profile → API Tokens → Create Token**.
-2. Select **Edit Cloudflare Workers** template. Ensure permissions include:
-   - `Account` → `Workers Scripts` → `Edit`
-   - `Account` → `Workers KV Storage` → `Edit`
-   - `Account` → `D1` → `Edit`
-3. In your GitHub repository, go to **Settings → Secrets and variables → Actions** and add:
-   - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID (found on your dashboard)
-   - `CLOUDFLARE_API_TOKEN`: The API Token created above
-4. Push your commits to `main`:
+### Recommended Development Workflow:
+1. Work and commit on the `preview` branch:
    ```bash
+   git checkout preview
    git add .
-   git commit -m "feat: my change"
+   git commit -m "feat: your new feature"
+   git push origin preview
+   ```
+2. Verify and test your changes live on `https://saas-template-preview.whoisseth.workers.dev`.
+3. When everything is verified, merge into `main` to deploy to production:
+   ```bash
+   git checkout main
+   git merge preview
    git push origin main
    ```
-   GitHub Actions will automatically deploy to your Cloudflare Worker.
 
 ## 8. Post-deploy & Integrations
 - **Custom Domain:** Add your custom domain under Worker → Settings → Domains & Routes.
