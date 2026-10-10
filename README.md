@@ -26,7 +26,7 @@ Opinionated, Cloudflare-first SaaS starter. Clone, rename, deploy.
 ## Quick start
 
 ```bash
-git clone https://github.com/omar16100/saas_template.git my-saas
+git clone https://github.com/whoisseth/saas_template.git my-saas
 cd my-saas
 pnpm install
 cp .env.example .env.local
@@ -40,119 +40,110 @@ The app boots with degraded features until you fill in credentials (auth needs t
 
 ---
 
-## Full setup
+## Full setup for New Projects (Cloning Guide)
 
-### 1. Prereqs
-- Node 22 (see `.nvmrc`) · pnpm 9 · a Cloudflare account · `wrangler login`
-- Domain added to Cloudflare (can be a subdomain); only required for deploy, not local dev
+### 1. Prerequisites
+- **Node 22** (see `.nvmrc`) & **pnpm 9**
+- Cloudflare account with `wrangler login` executed in your terminal
+- A custom domain on Cloudflare (for production deploy, optional for local dev)
 
-### 2. Install
-
+### 2. Install & Local Environment
 ```bash
 pnpm install
 cp .env.example .env.local
-```
 
-### 3. Local secret
-
-```bash
-# Generate a 32+ char secret for Better Auth
+# Generate a 32+ character secret for Better Auth:
 openssl rand -base64 32
-# paste into .env.local → BETTER_AUTH_SECRET
+# Paste into .env.local -> BETTER_AUTH_SECRET
 ```
 
-### 4. Create Cloudflare bindings
-
+### 3. Create Cloudflare Bindings
+When creating a new project from this template, create your own isolated Cloudflare infrastructure:
 ```bash
 # Databases
 wrangler d1 create saas_db
 wrangler d1 create saas_db_preview
 
-# KV (cache)
+# KV (Cache & Next.js ISR)
 wrangler kv namespace create CACHE
+wrangler kv namespace create NEXT_INC_CACHE_KV
 wrangler kv namespace create CACHE --preview
 
-# R2 buckets (uploads + Next ISR cache, both envs)
+# R2 Buckets (Uploads + Next ISR cache)
 wrangler r2 bucket create saas-uploads
 wrangler r2 bucket create saas-uploads-preview
 wrangler r2 bucket create saas-next-cache
 wrangler r2 bucket create saas-next-cache-preview
 
-# Queues (main + DLQ, both envs)
+# Queues (Optional background jobs)
 wrangler queues create saas-jobs
-wrangler queues create saas-jobs-dlq
 wrangler queues create saas-jobs-preview
-wrangler queues create saas-jobs-preview-dlq
 ```
 
-Paste the returned IDs into `wrangler.toml` wherever you see `REPLACE_ME`.
+Paste the returned `database_id` and KV `id` values into `wrangler.toml` in the corresponding `[[d1_databases]]` and `[[kv_namespaces]]` blocks.
 
-### 5. Secrets per environment
+> **Security Note on `wrangler.toml`:**
+> `database_id`, KV `id`, Google Client ID, and Cloudinary upload presets are internal resource identifiers, **not credentials**. Without an authenticated Cloudflare API token or account session, no one can query or modify your database. Sensitive server secrets are stored separately in Cloudflare's encrypted vault.
 
+### 4. Encrypted Secrets (Never in Git)
+Real server secrets must **never** be placed in `wrangler.toml` or committed to Git. Store them securely in Cloudflare's encrypted vault:
 ```bash
-# Production
+# Production Secrets
 wrangler secret put BETTER_AUTH_SECRET --env production
+wrangler secret put GOOGLE_CLIENT_SECRET --env production
 wrangler secret put STRIPE_SECRET_KEY --env production
 wrangler secret put STRIPE_WEBHOOK_SECRET --env production
 wrangler secret put RESEND_API_KEY --env production
-wrangler secret put TURNSTILE_SECRET_KEY --env production
 
-# Preview (repeat with TEST keys)
+# Preview Secrets (repeat with test keys)
 wrangler secret put BETTER_AUTH_SECRET --env preview
 wrangler secret put STRIPE_SECRET_KEY --env preview
-# ...etc
 ```
 
-Public (`NEXT_PUBLIC_*`) vars are not secrets, so never `wrangler secret` them. `next build` inlines them, so they must be set where you build (`.env.local`, your shell, or the GitHub environment used by `deploy.yml`); the `[env.*.vars]` blocks in `wrangler.toml` only cover runtime reads.
-
-### 6. Database
-
+### 5. Database Migrations
 ```bash
-pnpm db:migrate:local    # apply db/migrations locally
-pnpm db:migrate:preview  # apply to preview D1
-pnpm db:migrate:prod     # apply to production D1
-pnpm db:generate         # after editing db/schema: write the next migration, then commit it
+pnpm db:migrate:local     # apply migrations to local SQLite
+pnpm db:migrate:preview   # apply migrations to preview D1
+pnpm db:migrate:prod      # apply migrations to production D1
+pnpm db:generate          # after editing db/schema: writes next SQL migration to db/migrations
 ```
 
-If your D1 already has tables from migrations you generated before `0000_initial.sql` was committed, keep your own `db/migrations` history and run `pnpm db:generate` instead of applying it (see `docs/27092026_auth_schema_plan.md`).
-
-`db/schema/auth.ts` must hold every table and field the enabled Better Auth plugins write: Better Auth checks it on every auth request and fails the request on a mismatch. `tests/unit/auth-schema.test.ts` runs the same check, so adding a plugin without its tables fails `pnpm test`.
-
-### 7. Run
-
+### 6. Local Development & Verification
 ```bash
 pnpm dev         # http://localhost:3000
-pnpm build       # next build
-pnpm build:worker # next build + OpenNext worker bundle (.open-next/)
-pnpm preview     # run the built worker locally (after build:worker)
-pnpm typecheck
-pnpm lint
-pnpm test        # vitest
-pnpm test:e2e    # playwright
+pnpm typecheck   # verifies TypeScript + generates worker bindings
+pnpm lint        # ESLint
+pnpm test        # Vitest unit tests (50+ tests)
 ```
 
-### 8. Deploy
+### 7. Automated Push-to-Deploy (GitHub Actions CI/CD)
+Whenever you push to the `main` branch, `.github/workflows/deploy.yml` automatically tests, builds, executes pending D1 migrations, and deploys to Cloudflare Workers.
 
-```bash
-pnpm deploy:preview   # wrangler deploy --env preview
-pnpm run deploy       # wrangler deploy --env production (`pnpm deploy` is a pnpm builtin, so use `run`)
-```
+To enable this on a newly cloned repository:
+1. In Cloudflare Dashboard, go to **My Profile → API Tokens → Create Token**.
+2. Select **Edit Cloudflare Workers** template. Ensure permissions include:
+   - `Account` → `Workers Scripts` → `Edit`
+   - `Account` → `Workers KV Storage` → `Edit`
+   - `Account` → `D1` → `Edit` *(crucial for CI migrations)*
+3. In your GitHub repository, go to **Settings → Secrets and variables → Actions** and add:
+   - `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID (found on your dashboard)
+   - `CLOUDFLARE_API_TOKEN`: The API Token created above
+4. Push your commits to `main`:
+   ```bash
+   git add .
+   git commit -m "feat: my change"
+   git push origin main
+   ```
+   GitHub Actions will automatically build and deploy your project live.
 
-GitHub Actions can do this for you: `.github/workflows/deploy.yml` deploys a preview on every PR and production on merge to `main` once you add repo secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Create GitHub environments `preview` and `production`, each with at least the variable `NEXT_PUBLIC_APP_URL` plus any other `NEXT_PUBLIC_*` values your build needs; the workflow exports them before building and sets `NEXT_PUBLIC_IS_PREVIEW` itself. Without the secrets the deploy job is skipped and the workflow passes. Secrets are not passed to PRs from forks or Dependabot, so those PRs skip it too.
+### 8. Post-deploy Checklist & Integrations
+- [ ] Add custom domain under Cloudflare Worker → Settings → Domains & Routes.
+- [ ] Google OAuth: In Google Cloud Console, add `https://<your-domain>/api/auth/callback/google` to Authorized Redirect URIs.
+- [ ] Cloudinary Image Uploads: Set your Cloud Name and unsigned upload preset in `wrangler.toml` and `.env.local`.
+- [ ] Stripe Webhooks: Set endpoint to `https://<your-domain>/api/stripe/webhook` and paste signing secret.
+- [ ] Resend: Verify your sending domain (DKIM/SPF/DMARC) in Resend dashboard.
 
-### 9. Post-deploy checklist
-
-- [ ] Add your domain to CF and route `example.com/*` in `wrangler.toml`
-- [ ] Enable **CF Email Routing** (inbound only: support@, hello@ → your inbox)
-- [ ] Verify your sending domain in **Resend** (DKIM + SPF + DMARC)
-- [ ] Register a **Stripe** webhook endpoint per environment → paste signing secret
-- [ ] Create **Turnstile** site → paste keys
-- [ ] Create **Axiom** dataset + token → set up Cloudflare Logpush job → Axiom
-- [ ] Add site to **Google Search Console** and **Bing Webmaster Tools** → paste verification tokens
-- [ ] Generate `INDEXNOW_KEY` → serve at `/{key}.txt` under `public/`
-- [ ] Create **PostHog** project + **GA4** property → paste IDs
-
-See `docs/setup.md` for verbose version and `todo.md` for the full one-time checklist.
+See [docs/setup.md](docs/setup.md) for verbose details and runbooks.
 
 ---
 
