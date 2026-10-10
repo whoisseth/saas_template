@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 
 const KEY = "consent-v1";
 const CHANGE_EVENT = "consent-change";
+
+function subscribeStorage(callback: () => void) {
+  window.addEventListener(CHANGE_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
 
 function getStoredConsent(): boolean | null {
   if (typeof window === "undefined") return null;
@@ -16,6 +25,20 @@ function getStoredConsent(): boolean | null {
     // localStorage might be blocked or restricted
   }
   return null;
+}
+
+function getServerConsent(): boolean | null {
+  return null;
+}
+
+const emptySubscribe = () => () => {};
+
+function useIsClient(): boolean {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 }
 
 function saveConsent(granted: boolean) {
@@ -35,14 +58,11 @@ function saveConsent(granted: boolean) {
 }
 
 export function useConsent() {
-  const [consent, setConsent] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setConsent(getStoredConsent());
-    const handler = () => setConsent(getStoredConsent());
-    window.addEventListener(CHANGE_EVENT, handler);
-    return () => window.removeEventListener(CHANGE_EVENT, handler);
-  }, []);
+  const consent = useSyncExternalStore(
+    subscribeStorage,
+    getStoredConsent,
+    getServerConsent
+  );
 
   return {
     consent,
@@ -52,31 +72,20 @@ export function useConsent() {
 }
 
 export function ConsentBanner() {
-  const [mounted, setMounted] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const isClient = useIsClient();
+  const { consent } = useConsent();
 
-  useEffect(() => {
-    setMounted(true);
-    const existing = getStoredConsent();
-    if (existing === null) {
-      setIsOpen(true);
-    }
-  }, []);
-
-  if (!mounted || !isOpen) return null;
+  if (!isClient || consent !== null) return null;
 
   const handleAcceptAll = () => {
-    setIsOpen(false);
     saveConsent(true);
   };
 
   const handleEssentialOnly = () => {
-    setIsOpen(false);
     saveConsent(false);
   };
 
   const handleDismiss = () => {
-    setIsOpen(false);
     saveConsent(false);
   };
 
