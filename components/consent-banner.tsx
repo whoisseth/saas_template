@@ -1,50 +1,84 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 const KEY = "consent-v1";
 const CHANGE_EVENT = "consent-change";
 
-function readConsent(): boolean | null {
+function getStoredConsent(): boolean | null {
+  if (typeof window === "undefined") return null;
   try {
     const v = localStorage.getItem(KEY);
-    return v === "granted" ? true : v === "denied" ? false : null;
+    if (v === "granted") return true;
+    if (v === "denied") return false;
   } catch {
-    return null;
+    // localStorage might be blocked or restricted
   }
-}
-
-function readServerConsent(): boolean | null {
   return null;
 }
 
-function subscribeToConsent(onChange: () => void) {
-  window.addEventListener(CHANGE_EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(CHANGE_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
-  };
+function saveConsent(granted: boolean) {
+  try {
+    localStorage.setItem(KEY, granted ? "granted" : "denied");
+  } catch {
+    // ignore if storage is disabled
+  }
+  try {
+    document.cookie = `${KEY}=${granted ? "granted" : "denied"}; path=/; max-age=31536000; SameSite=Lax`;
+  } catch {
+    // ignore
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }
 }
 
 export function useConsent() {
-  const consent = useSyncExternalStore(subscribeToConsent, readConsent, readServerConsent);
-  function set(v: boolean) {
-    try {
-      localStorage.setItem(KEY, v ? "granted" : "denied");
-    } catch {
-      // Storage unavailable or disabled
-    }
-    window.dispatchEvent(new Event(CHANGE_EVENT));
-  }
-  return { consent, grant: () => set(true), deny: () => set(false) };
+  const [consent, setConsent] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setConsent(getStoredConsent());
+    const handler = () => setConsent(getStoredConsent());
+    window.addEventListener(CHANGE_EVENT, handler);
+    return () => window.removeEventListener(CHANGE_EVENT, handler);
+  }, []);
+
+  return {
+    consent,
+    grant: () => saveConsent(true),
+    deny: () => saveConsent(false),
+  };
 }
 
 export function ConsentBanner() {
-  const { consent, grant, deny } = useConsent();
+  const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  if (consent !== null) return null;
+  useEffect(() => {
+    setMounted(true);
+    const existing = getStoredConsent();
+    if (existing === null) {
+      setIsOpen(true);
+    }
+  }, []);
+
+  if (!mounted || !isOpen) return null;
+
+  const handleAcceptAll = () => {
+    setIsOpen(false);
+    saveConsent(true);
+  };
+
+  const handleEssentialOnly = () => {
+    setIsOpen(false);
+    saveConsent(false);
+  };
+
+  const handleDismiss = () => {
+    setIsOpen(false);
+    saveConsent(false);
+  };
 
   return (
     <div
@@ -56,9 +90,9 @@ export function ConsentBanner() {
         {/* Dismiss X button */}
         <button
           type="button"
-          onClick={deny}
-          aria-label="Dismiss cookie notice"
-          className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          onClick={handleDismiss}
+          aria-label="Close cookie preferences"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95 cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -92,15 +126,15 @@ export function ConsentBanner() {
             <div className="mt-3.5 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={grant}
-                className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={handleAcceptAll}
+                className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3 text-xs font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Accept All
               </button>
               <button
                 type="button"
-                onClick={deny}
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={handleEssentialOnly}
+                className="inline-flex h-8 items-center justify-center rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-all hover:bg-muted active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Essential Only
               </button>
