@@ -61,9 +61,9 @@ jobs:
           APP_URL=$(printf '%s' "$VARS_JSON" | jq -r '.NEXT_PUBLIC_APP_URL // ""')
           if [ -z "$APP_URL" ] || [ "$APP_URL" = "null" ]; then
             if [ "$IS_PREVIEW" = "true" ]; then
-              APP_URL="https://preview.example.com"
+              APP_URL="https://saas-template-preview.whoisseth.workers.dev"
             else
-              APP_URL="https://saas-template-prod.utkarshseth2019.workers.dev"
+              APP_URL="https://saas-template-prod.whoisseth.workers.dev"
             fi
           fi
           echo "NEXT_PUBLIC_APP_URL=$APP_URL" >> "$GITHUB_ENV"

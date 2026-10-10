@@ -44,11 +44,12 @@ enabled = true
 # ===== Preview =====
 [env.preview]
 name = "saas-template-preview"
+workers_dev = true
 
 [env.preview.vars]
-NEXT_PUBLIC_APP_URL = "https://preview.example.com"
+NEXT_PUBLIC_APP_URL = "https://saas-template-preview.whoisseth.workers.dev"
 NEXT_PUBLIC_IS_PREVIEW = "true"
-BETTER_AUTH_RP_ID = "preview.example.com"
+BETTER_AUTH_RP_ID = "whoisseth.workers.dev"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
 
@@ -85,9 +86,9 @@ workers_dev = true
 
 [env.production.vars]
 NEXT_PUBLIC_APP_NAME = "SaaS Template"
-NEXT_PUBLIC_APP_URL = "https://saas-template-prod.utkarshseth2019.workers.dev"
+NEXT_PUBLIC_APP_URL = "https://saas-template-prod.whoisseth.workers.dev"
 NEXT_PUBLIC_IS_PREVIEW = "false"
-BETTER_AUTH_RP_ID = "utkarshseth2019.workers.dev"
+BETTER_AUTH_RP_ID = "whoisseth.workers.dev"
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = "dzqnzl3ir"
 NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET = "mht0pfa5"
 GOOGLE_CLIENT_ID = "212342242306-71l03g04pq683jjgqpjv0jr7ieulvfeg.apps.googleusercontent.com"
