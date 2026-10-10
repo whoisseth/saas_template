@@ -9,6 +9,7 @@ export type CloudflareSecrets = {
   RESEND_API_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
   AXIOM_TOKEN?: string;
+  UPLOADS?: R2Bucket;
 };
 
 export function cfEnv(): CloudflareEnv & CloudflareSecrets {
