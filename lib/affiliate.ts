@@ -19,9 +19,20 @@ export function generateSubId(userId?: string | null): string {
  */
 export function buildAffiliateUrl(originalUrl: string, subId: string): string {
   try {
+    const publisherId = process.env.EARNLY_PUBLISHER_ID || "c7zko6s5mfo";
+    
+    // If it's a direct Flipkart link, attach Flipkart affiliate params directly as fallback
+    if (originalUrl.includes("flipkart.com")) {
+      const urlObj = new URL(originalUrl);
+      urlObj.searchParams.set("affid", "admingopai");
+      urlObj.searchParams.set("affExtParam1", subId);
+      urlObj.searchParams.set("affExtParam2", publisherId);
+      return urlObj.toString();
+    }
+
+    // Standard Earnly redirect wrapper for Amazon, Myntra, Ajio, etc.
     const encodedTarget = encodeURIComponent(originalUrl);
-    // Standard affiliate redirect format
-    return `${EARNLY_BASE_REDIRECT}?pid=${EARNLY_PUBLISHER_ID}&subid=${subId}&url=${encodedTarget}`;
+    return `https://www.earnly.in/deal?ref=${publisherId}&subid=${subId}&url=${encodedTarget}`;
   } catch {
     return originalUrl;
   }
