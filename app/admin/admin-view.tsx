@@ -22,6 +22,14 @@ import {
   RefreshCw,
   X,
   Copy,
+  HelpCircle,
+  ArrowRight,
+  ShieldCheck,
+  Check,
+  DollarSign,
+  Smartphone,
+  ShoppingCart,
+  Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -140,7 +148,7 @@ interface UserDeepDive {
 }
 
 export function AdminView({ metrics }: AdminViewProps) {
-  const [activeTab, setActiveTab] = useState<"payouts" | "reconcile" | "clicks" | "users">("payouts");
+  const [activeTab, setActiveTab] = useState<"payouts" | "reconcile" | "clicks" | "users" | "flowchart">("payouts");
 
   // Reconcile state
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -473,6 +481,17 @@ export function AdminView({ metrics }: AdminViewProps) {
             }`}
           >
             Verify Orders & CSV
+          </button>
+          <button
+            onClick={() => setActiveTab("flowchart")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "flowchart"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-emerald-600 dark:text-emerald-400 hover:text-foreground"
+            }`}
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            <span>How It Works (Flowchart)</span>
           </button>
         </div>
       </div>
@@ -1042,7 +1061,196 @@ export function AdminView({ metrics }: AdminViewProps) {
         </div>
       )}
 
-      {/* USER DEEP-DIVE INSPECTOR MODAL */}
+      {/* TAB 5: HOW IT WORKS - VISUAL FLOWCHART & ADMIN GUIDE */}
+      {activeTab === "flowchart" && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.06] via-teal-500/[0.03] to-background p-6 sm:p-8 shadow-sm space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+              <ShieldCheck className="h-4 w-4" />
+              <span>Admin System Architecture & Flowchart</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+              How CashDeals Works: The Complete Plain-English Guide
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+              Designed specifically for administrators without technical backgrounds. This visual flowchart explains exactly how user purchases are tracked, how commissions are secured, how profit is guaranteed, and how payouts are fulfilled.
+            </p>
+          </div>
+
+          {/* 5-Step Visual Flowchart Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {/* Step 1 */}
+            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    STEP 01
+                  </span>
+                  <div className="h-8 w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <Link2 className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold text-foreground">Shopper Converts Link</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  The user pastes an Amazon or Flipkart link into CashDeals. The system attaches your affiliate publisher ID and embeds an invisible <strong>SubID</strong> (e.g. <code className="text-[10px] bg-muted px-1 py-0.5 rounded font-mono">u_cm7x...</code>).
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2.5 text-[11px] text-muted-foreground border border-border/50">
+                <strong className="text-foreground">Analogy:</strong> Like attaching a barcode luggage tag at the airport—it travels everywhere with that shopper.
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition-colors">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                    STEP 02
+                  </span>
+                  <div className="h-8 w-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                    <ShoppingCart className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold text-foreground">User Buys & Pays Store</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  The shopper completes checkout on Amazon or Flipkart using UPI, Cards, or NetBanking.
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2.5 text-[11px] text-muted-foreground border border-border/50">
+                <strong className="text-foreground">Privacy Note:</strong> For bank privacy, Amazon never shares card numbers. Instead, Amazon saves: <em>&ldquo;Order completed under SubID u_cm7x...&rdquo;</em>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-amber-500/40 transition-colors">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    STEP 03
+                  </span>
+                  <div className="h-8 w-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold text-foreground">Merchant Confirms Sale</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  After delivery and the 7-day return period clears, Amazon/Earnly records: <em>&ldquo;₹100 commission owed to CashDeals for SubID u_cm7x...&rdquo;</em>
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2.5 text-[11px] text-muted-foreground border border-border/50">
+                <strong className="text-foreground">Real Money:</strong> The merchant deposits this cash directly into your bank or affiliate balance.
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-colors">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    STEP 04
+                  </span>
+                  <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold text-foreground">You Verify & Split Profit</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  In the <strong>Verify Orders</strong> tab, paste the SubID and enter your ₹100 commission.
+                </p>
+              </div>
+              <div className="rounded-xl bg-emerald-500/10 p-2.5 text-[11px] text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
+                <strong className="text-emerald-700 dark:text-emerald-200">The Profit Split:</strong>
+                <br />• <strong>You keep: ₹75 (75% Profit)</strong>
+                <br />• <strong>User gets: ₹25 (Cashback)</strong>
+              </div>
+            </div>
+
+            {/* Step 5 */}
+            <div className="relative rounded-3xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-teal-500/40 transition-colors">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400">
+                    STEP 05
+                  </span>
+                  <div className="h-8 w-8 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center">
+                    <QrCode className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-bold text-foreground">UPI Payout via PhonePe</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Once user reaches ₹50, they request a withdrawal to their UPI ID.
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-2.5 text-[11px] text-muted-foreground border border-border/50">
+                <strong className="text-foreground">Admin Action:</strong> Open <em>UPI Payouts</em>, scan the QR code on PhonePe/GPay, enter the 12-digit UTR, and mark Paid!
+              </div>
+            </div>
+          </div>
+
+          {/* Deep-Dive Q&A Section For Admins */}
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-6">
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <HelpCircle className="h-4 w-4 text-emerald-500" />
+              Key Admin Questions Answered (Plain English)
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              {/* Question 1 */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
+                <h4 className="font-bold text-foreground flex items-center gap-1.5 text-sm">
+                  <span className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-center font-bold">1</span>
+                  How do we know WHICH user bought WHICH item?
+                </h4>
+                <p className="text-muted-foreground leading-relaxed">
+                  Every user has a unique ID in the CashDeals database. When they convert a link, CashDeals creates a temporary tracking SubID (e.g. <code className="px-1 py-0.5 rounded bg-muted font-mono font-bold">u_user123_abc45</code>). This tag is passed to Amazon or Flipkart. When the sale happens, Amazon logs that exact SubID. When you look at your Amazon or Earnly report, that SubID links directly back to that single user account with 100% certainty.
+                </p>
+              </div>
+
+              {/* Question 2 */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
+                <h4 className="font-bold text-foreground flex items-center gap-1.5 text-sm">
+                  <span className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-center font-bold">2</span>
+                  How do we know the user actually made a payment?
+                </h4>
+                <p className="text-muted-foreground leading-relaxed">
+                  Neither Amazon nor Flipkart ever pays affiliate commission on unpaid or failed orders. They only confirm a commission after the buyer has completed payment and the return window has expired (typically 7 days). If a customer cancels or returns the item, the merchant cancels the commission. Because you only verify orders that appear as confirmed in your affiliate earnings report, you will <strong>never</strong> pay cashback on a fake, unpaid, or returned item.
+                </p>
+              </div>
+
+              {/* Question 3 */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
+                <h4 className="font-bold text-foreground flex items-center gap-1.5 text-sm">
+                  <span className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-center font-bold">3</span>
+                  Can a user cheat the system or claim free money?
+                </h4>
+                <p className="text-muted-foreground leading-relaxed">
+                  <strong>Impossible.</strong> Users have zero ability to approve their own cashback. A balance can only be credited in two ways:
+                  <br />1. You (the admin) personally verify the SubID in the admin portal.
+                  <br />2. You upload the official transaction CSV report exported directly from Earnly.
+                  <br />Since fake claims never appear in your merchant earnings report, fraud is impossible.
+                </p>
+              </div>
+
+              {/* Question 4 */}
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border space-y-2">
+                <h4 className="font-bold text-foreground flex items-center gap-1.5 text-sm">
+                  <span className="h-5 w-5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-center font-bold">4</span>
+                  How do we add multiple team admins?
+                </h4>
+                <p className="text-muted-foreground leading-relaxed">
+                  In your <code className="px-1 py-0.5 rounded bg-muted font-mono font-bold">.env.local</code> file, you can add as many admin emails as you want, separated by commas:
+                  <br />
+                  <code className="block mt-1 p-2 rounded bg-muted/80 font-mono text-[11px] text-foreground">
+                    ADMIN_EMAILS=&quot;utkarshseth2019@gmail.com,partner@gmail.com&quot;
+                  </code>
+                  Any user who signs in with one of these emails automatically receives full access to this Admin Center.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {inspectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-card border border-border p-6 shadow-2xl flex flex-col space-y-4 overflow-hidden">
