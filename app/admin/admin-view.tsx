@@ -20,6 +20,8 @@ import {
   Search,
   Plus,
   RefreshCw,
+  X,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -90,6 +92,53 @@ interface ClickItem {
   dealTitle?: string | null;
 }
 
+interface UserDeepDive {
+  user: {
+    id: string;
+    name?: string | null;
+    email: string;
+    role: string;
+    createdAt: string;
+    confirmedBalance: number;
+    referralCode: string;
+    referralLink: string;
+  };
+  clicks: Array<{
+    id: string;
+    subId: string;
+    originalUrl: string;
+    affiliateUrl: string;
+    ipAddress?: string | null;
+    createdAt: string;
+    dealTitle?: string | null;
+    storeName?: string | null;
+  }>;
+  orders: Array<{
+    id: string;
+    orderNumber: string;
+    storeName: string;
+    orderAmount: number;
+    userRewardAmount: number;
+    status: string;
+    createdAt: string;
+  }>;
+  scratchCards: Array<{
+    id: string;
+    rewardAmount: number;
+    title: string;
+    isRevealed: boolean;
+    createdAt: string;
+  }>;
+  payouts: Array<{
+    id: string;
+    amount: number;
+    upiId: string;
+    status: string;
+    utrReference?: string | null;
+    requestedAt: string;
+  }>;
+}
+
 export function AdminView({ metrics }: AdminViewProps) {
   const [activeTab, setActiveTab] = useState<"payouts" | "reconcile" | "clicks" | "users">("payouts");
 
@@ -122,6 +171,27 @@ export function AdminView({ metrics }: AdminViewProps) {
 
   // Search filter
   const [userSearch, setUserSearch] = useState("");
+
+  // User Inspector Deep-Dive state
+  const [inspectedUser, setInspectedUser] = useState<UserDeepDive | null>(null);
+  const [isLoadingInspector, setIsLoadingInspector] = useState(false);
+
+  async function handleInspectUser(userId: string) {
+    setIsLoadingInspector(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`);
+      const data = (await res.json()) as UserDeepDive & { success?: boolean; error?: string };
+      if (res.ok && data.success) {
+        setInspectedUser(data);
+      } else {
+        toast.error(data.error || "Failed to load user details");
+      }
+    } catch {
+      toast.error("Failed to inspect user activity");
+    } finally {
+      setIsLoadingInspector(false);
+    }
+  }
 
   useEffect(() => {
     fetchPayouts();
@@ -730,16 +800,18 @@ export function AdminView({ metrics }: AdminViewProps) {
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="pb-3 font-semibold">User</th>
                   <th className="pb-3 font-semibold">Role</th>
+                  <th className="pb-3 font-semibold">Referral Code</th>
                   <th className="pb-3 font-semibold">Joined Date</th>
                   <th className="pb-3 font-semibold text-right">Orders</th>
                   <th className="pb-3 font-semibold text-right">Scratch Cards</th>
                   <th className="pb-3 font-semibold text-right">Confirmed Balance</th>
+                  <th className="pb-3 font-semibold text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
                       No matching users found.
                     </td>
                   </tr>
@@ -768,6 +840,11 @@ export function AdminView({ metrics }: AdminViewProps) {
                           {u.role}
                         </span>
                       </td>
+                      <td className="py-3 font-mono text-[11px]">
+                        <span className="px-2 py-0.5 rounded bg-muted/80 text-foreground font-semibold">
+                          ref={u.id.slice(0, 8)}
+                        </span>
+                      </td>
                       <td className="py-3 text-muted-foreground text-[11px]">
                         {new Date(u.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
@@ -779,6 +856,14 @@ export function AdminView({ metrics }: AdminViewProps) {
                       <td className="py-3 text-right font-semibold">{u.scratchCardsCount}</td>
                       <td className="py-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
                         ₹{u.confirmedBalance.toFixed(2)}
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => handleInspectUser(u.id)}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-muted hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                        >
+                          Inspect Activity
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -854,6 +939,191 @@ export function AdminView({ metrics }: AdminViewProps) {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* USER DEEP-DIVE INSPECTOR MODAL */}
+      {inspectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl max-h-[90vh] rounded-3xl bg-card border border-border p-6 shadow-2xl flex flex-col space-y-4 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center justify-center text-sm">
+                  {inspectedUser.user.name?.slice(0, 1) || inspectedUser.user.email.slice(0, 1).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-foreground">
+                    {inspectedUser.user.name || "User Account"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">{inspectedUser.user.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setInspectedUser(null)}
+                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Modal Body */}
+            <div className="overflow-y-auto space-y-4 pr-1 text-xs">
+              {/* Referral Intelligence Card */}
+              <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <Users className="h-3 w-3" /> Referral Tracking & Anti-Abuse
+                </span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1">
+                  <div>
+                    <p className="text-xs font-mono font-bold text-foreground">
+                      Code: {inspectedUser.user.referralCode}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground truncate max-w-sm">
+                      {inspectedUser.user.referralLink}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(inspectedUser.user.referralLink);
+                      toast.success("Referral link copied!");
+                    }}
+                    className="py-1 px-3 rounded-lg border border-border hover:bg-muted text-[11px] font-semibold flex items-center gap-1 transition-colors flex-shrink-0"
+                  >
+                    <Copy className="h-3 w-3" /> Copy Link
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground bg-background/60 p-2 rounded-xl border border-border/60">
+                  🛡️ <strong>Anti-Abuse Rule:</strong> Referral bonuses are unlocked strictly after the referred user completes their first verified order. Zero bonus for dummy signups.
+                </p>
+              </div>
+
+              {/* Stats Overview */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 rounded-xl border border-border bg-card">
+                  <span className="text-[10px] text-muted-foreground block">Confirmed Wallet</span>
+                  <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
+                    ₹{inspectedUser.user.confirmedBalance.toFixed(2)}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl border border-border bg-card">
+                  <span className="text-[10px] text-muted-foreground block">Tracked Orders</span>
+                  <span className="text-sm font-extrabold text-foreground">
+                    {inspectedUser.orders.length}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl border border-border bg-card">
+                  <span className="text-[10px] text-muted-foreground block">Total Clicks</span>
+                  <span className="text-sm font-extrabold text-foreground">
+                    {inspectedUser.clicks.length}
+                  </span>
+                </div>
+              </div>
+
+              {/* Click Sessions */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <MousePointerClick className="h-3.5 w-3.5 text-emerald-500" />
+                  Recent Shopper Click Sessions ({inspectedUser.clicks.length})
+                </h4>
+                {inspectedUser.clicks.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground italic">No clicks recorded yet.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                    {inspectedUser.clicks.map((c) => (
+                      <div
+                        key={c.id}
+                        className="p-2 rounded-xl bg-muted/30 border border-border/80 flex items-center justify-between text-[11px]"
+                      >
+                        <div className="truncate max-w-xs">
+                          <span className="font-semibold text-foreground">
+                            {c.dealTitle || c.storeName || "Store Link"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground block font-mono">
+                            SubID: {c.subId} {c.ipAddress ? `• IP: ${c.ipAddress}` : ""}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                          {new Date(c.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tracked Orders */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <ShoppingBag className="h-3.5 w-3.5 text-blue-500" />
+                  Tracked Orders ({inspectedUser.orders.length})
+                </h4>
+                {inspectedUser.orders.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground italic">No purchases tracked yet.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                    {inspectedUser.orders.map((o) => (
+                      <div
+                        key={o.id}
+                        className="p-2.5 rounded-xl bg-muted/30 border border-border/80 flex items-center justify-between text-[11px]"
+                      >
+                        <div>
+                          <span className="font-bold text-foreground">{o.storeName}</span>
+                          <span className="text-[10px] text-muted-foreground block font-mono">
+                            Order #{o.orderNumber} • Amount: ₹{o.orderAmount}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400 block">
+                            +₹{o.userRewardAmount} Reward
+                          </span>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-muted uppercase">
+                            {o.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* UPI Withdrawals */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Wallet className="h-3.5 w-3.5 text-amber-500" />
+                  UPI Payout Requests ({inspectedUser.payouts.length})
+                </h4>
+                {inspectedUser.payouts.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground italic">No withdrawal requests.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {inspectedUser.payouts.map((p) => (
+                      <div
+                        key={p.id}
+                        className="p-2.5 rounded-xl bg-muted/30 border border-border/80 flex items-center justify-between text-[11px]"
+                      >
+                        <div>
+                          <span className="font-bold text-foreground">₹{p.amount.toFixed(2)}</span>
+                          <span className="text-[10px] text-muted-foreground block font-mono">
+                            UPI: {p.upiId} {p.utrReference ? `• UTR: ${p.utrReference}` : ""}
+                          </span>
+                        </div>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            p.status === "PAID"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

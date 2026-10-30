@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sparkles, LayoutDashboard, Link as LinkIcon, Smartphone } from "lucide-react";
+import { Home, Sparkles, Wallet, Link as LinkIcon, Smartphone } from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { name: "Home", href: "/", icon: Home },
   { name: "Deals", href: "/deals", icon: Sparkles },
   { name: "Convert", href: "/#convert", icon: LinkIcon, isSpecial: true },
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Wallet", href: "/wallet", icon: Wallet },
   { name: "Get App", href: "/app", icon: Smartphone },
 ];
 
@@ -26,6 +26,7 @@ export function MobileBottomNav() {
   function isRouteActive(href: string): boolean {
     if (href === "/") return pathname === "/";
     if (href.startsWith("/#")) return false;
+    if (href === "/wallet") return pathname === "/wallet" || pathname === "/dashboard";
     return pathname.startsWith(href);
   }
 
