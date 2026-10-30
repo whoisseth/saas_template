@@ -27,9 +27,6 @@ export default async function MarketingLayout({ children }: { children: React.Re
           </Link>
 
           <div className="hidden sm:flex items-center gap-6 text-xs sm:text-sm font-semibold">
-            <Link href="/deals" className="text-muted-foreground hover:text-foreground transition-colors">
-              Hot Deals
-            </Link>
             <Link href="/wallet" className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
               <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Wallet & Rewards

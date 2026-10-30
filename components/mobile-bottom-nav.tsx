@@ -14,7 +14,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Deals", href: "/deals", icon: Sparkles },
   { name: "Convert", href: "/#convert", icon: LinkIcon, isSpecial: true },
   { name: "Wallet", href: "/wallet", icon: Wallet },
   { name: "Get App", href: "/app", icon: Smartphone },
@@ -35,7 +34,7 @@ export function MobileBottomNav() {
       aria-label="Mobile Navigation"
       className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-lg border-t border-border/80 px-2 pt-1 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] shadow-xl"
     >
-      <div className="grid grid-cols-5 items-center justify-around max-w-md mx-auto">
+      <div className="grid grid-cols-4 items-center justify-around max-w-md mx-auto">
         {navItems.map((item) => {
           const active = isRouteActive(item.href);
           const Icon = item.icon;

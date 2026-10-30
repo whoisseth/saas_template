@@ -452,7 +452,7 @@ export function AdminView({ metrics }: AdminViewProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Clicks & Deals ({totalClicks})
+            Shopper Clicks ({totalClicks})
           </button>
           <button
             onClick={() => setActiveTab("users")}
@@ -625,71 +625,18 @@ export function AdminView({ metrics }: AdminViewProps) {
         </div>
       )}
 
-      {/* TAB 2: CLICKS & DEALS ANALYTICS */}
+      {/* TAB 2: SHOPPER CLICKS & SUBID ATTRIBUTION */}
       {activeTab === "clicks" && (
         <div className="space-y-6">
-          {/* Quick Add Deal Tool */}
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                <Plus className="h-4 w-4" />
-              </span>
-              <div>
-                <h2 className="text-base font-bold">Auto-Import Product Deal</h2>
-                <p className="text-xs text-muted-foreground">
-                  Paste any Flipkart or Amazon URL. The system automatically scrapes the title, image, price, and lists it for all users!
-                </p>
-              </div>
-            </div>
-
-            <form onSubmit={handleQuickAddDeal} className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="url"
-                value={newDealUrl}
-                onChange={(e) => setNewDealUrl(e.target.value)}
-                placeholder="Paste Flipkart or Amazon product link..."
-                className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              <select
-                value={newDealCategory}
-                onChange={(e) => setNewDealCategory(e.target.value)}
-                className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <option value="Electronics">Electronics</option>
-                <option value="Fashion">Fashion</option>
-                <option value="Smartphones">Smartphones</option>
-                <option value="Accessories">Accessories</option>
-              </select>
-              <button
-                type="submit"
-                disabled={isAddingDeal}
-                className="py-2.5 px-5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 disabled:opacity-60 flex-shrink-0"
-              >
-                {isAddingDeal ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Fetching & Adding...
-                  </>
-                ) : (
-                  <>
-                    <PlusCircle className="h-3.5 w-3.5" />
-                    Add Deal
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Deals Clicks Ranking Table */}
           <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-bold flex items-center gap-2">
                   <MousePointerClick className="h-4 w-4 text-emerald-500" />
-                  Product Clicks & Performance
+                  Shopper Link Clicks & SubID Attribution Stream
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Ranked by total shopper clicks and interactions.
+                  Live real-time feed of every link converted, the generated SubID, and the shopper identity.
                 </p>
               </div>
               <button
@@ -705,81 +652,18 @@ export function AdminView({ metrics }: AdminViewProps) {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
-                    <th className="pb-3 font-semibold">Product</th>
-                    <th className="pb-3 font-semibold">Store</th>
-                    <th className="pb-3 font-semibold">Price</th>
-                    <th className="pb-3 font-semibold text-right">Total Clicks</th>
-                    <th className="pb-3 font-semibold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {dealsList.map((deal) => (
-                    <tr key={deal.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 pr-3">
-                        <div className="flex items-center gap-2.5">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={deal.imageUrl}
-                            alt={deal.title}
-                            className="h-9 w-9 rounded-lg object-cover bg-muted flex-shrink-0"
-                          />
-                          <span className="font-semibold text-foreground line-clamp-1 max-w-xs">
-                            {deal.title}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                          {deal.storeName || "Store"}
-                        </span>
-                      </td>
-                      <td className="py-3 font-semibold">
-                        ₹{deal.discountedPrice.toLocaleString("en-IN")}
-                      </td>
-                      <td className="py-3 text-right">
-                        <span className="font-extrabold text-foreground px-2 py-0.5 rounded bg-muted">
-                          {deal.clicksCount}
-                        </span>
-                      </td>
-                      <td className="py-3 text-right">
-                        <a
-                          href={`/api/redirect?url=${encodeURIComponent(deal.targetUrl)}&dealId=${deal.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
-                        >
-                          Test Link <ExternalLink className="h-2.5 w-2.5" />
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Recent Live Clicks Stream */}
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              Live Shopper Click Activity Stream
-            </h2>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground">
                     <th className="pb-3 font-semibold">Time</th>
                     <th className="pb-3 font-semibold">SubID</th>
-                    <th className="pb-3 font-semibold">User</th>
-                    <th className="pb-3 font-semibold">Deal / Target URL</th>
+                    <th className="pb-3 font-semibold">Shopper / User</th>
+                    <th className="pb-3 font-semibold">Merchant / Original URL</th>
+                    <th className="pb-3 font-semibold text-right">Affiliate Route</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {recentClicks.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-6 text-center text-muted-foreground">
-                        No clicks logged yet.
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                        No shopper clicks logged yet. Share your store link converter!
                       </td>
                     </tr>
                   ) : (
@@ -793,7 +677,9 @@ export function AdminView({ metrics }: AdminViewProps) {
                           })}
                         </td>
                         <td className="py-2.5 font-mono text-[11px] text-foreground font-semibold">
-                          {click.subId}
+                          <span className="px-2 py-0.5 rounded bg-muted/80 text-foreground font-semibold font-mono">
+                            {click.subId}
+                          </span>
                         </td>
                         <td className="py-2.5 text-[11px]">
                           {click.userName || click.userEmail ? (
@@ -804,8 +690,18 @@ export function AdminView({ metrics }: AdminViewProps) {
                             <span className="text-muted-foreground italic">Guest</span>
                           )}
                         </td>
-                        <td className="py-2.5 max-w-sm truncate text-[11px]">
+                        <td className="py-2.5 max-w-xs truncate text-[11px]">
                           {click.dealTitle || click.originalUrl}
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <a
+                            href={click.affiliateUrl || click.originalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                          >
+                            Open Link <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
                         </td>
                       </tr>
                     ))

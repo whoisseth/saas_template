@@ -101,10 +101,11 @@ export default async function WalletPage() {
 
           <div className="flex items-center gap-2.5">
             <Link
-              href="/deals"
-              className="px-3 py-1.5 rounded-xl font-semibold border border-border hover:bg-muted text-xs transition-colors"
+              href="/#convert"
+              className="px-3 py-1.5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs flex items-center gap-1 shadow-sm transition-all active:scale-95"
             >
-              Browse Deals
+              <Sparkles className="h-3 w-3" />
+              <span>+ Earn Cashback</span>
             </Link>
           </div>
         </div>
