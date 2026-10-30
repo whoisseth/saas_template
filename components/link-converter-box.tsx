@@ -1,17 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Link2, ArrowRight, Sparkles, Loader2, Clipboard, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
+import { Link2, ArrowRight, Sparkles, Loader2, Clipboard, ExternalLink, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AuthGuardModal } from "./auth-guard-modal";
+import { StoreBrandBadge } from "./store-brand-badge";
 
 interface ConvertedResult {
-  title: string;
-  imageUrl: string;
-  price?: number;
   store: string;
   subId: string;
   affiliateUrl: string;
+  originalUrl: string;
 }
 
 export function LinkConverterBox() {
@@ -35,7 +34,7 @@ export function LinkConverterBox() {
   async function handleConvert(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) {
-      toast.error("Please paste a Flipkart or Amazon product link");
+      toast.error("Please paste a Flipkart, Amazon, Myntra, or Ajio link");
       return;
     }
 
@@ -52,9 +51,9 @@ export function LinkConverterBox() {
       const data = (await res.json()) as ConvertedResult & { success?: boolean; error?: string };
       if (res.ok && data.success) {
         setResult(data);
-        toast.success("Cashback tracking activated for this product!");
+        toast.success(`Cashback tracking activated for ${data.store}!`);
       } else {
-        toast.error(data.error || "Failed to convert link. Please verify URL.");
+        toast.error(data.error || "Please provide a valid Flipkart, Amazon, Myntra, or Ajio link");
       }
     } catch {
       toast.error("Connection error. Please try again.");
@@ -92,8 +91,8 @@ export function LinkConverterBox() {
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Paste Flipkart, Amazon, or Myntra link..."
-                className="w-full rounded-2xl border border-border bg-background/80 pl-10 pr-24 py-3.5 text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                placeholder="Paste Flipkart, Amazon, Myntra, or Ajio product link..."
+                className="w-full rounded-2xl border border-border bg-background/80 pl-10 pr-24 py-3.5 text-xs sm:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-mono sm:font-sans"
               />
               <button
                 type="button"
@@ -114,7 +113,7 @@ export function LinkConverterBox() {
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating Tracked Deal...
+                  Generating Cashback Link...
                 </>
               ) : (
                 <>
@@ -125,63 +124,53 @@ export function LinkConverterBox() {
             </button>
           </form>
 
-          {/* Converted Product Preview Result */}
+          {/* Clean, Verified Result Card (No fake images) */}
           {result && (
             <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/80">
-                <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={result.imageUrl}
-                    alt={result.title}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      {result.store}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                      <CheckCircle className="h-3 w-3 text-emerald-500" />
-                      Tracked
-                    </span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-muted/40 border border-emerald-500/30">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-24 rounded-xl bg-background border border-border p-1.5 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <StoreBrandBadge storeName={result.store} className="h-6" />
                   </div>
-                  <h4 className="text-xs font-semibold truncate text-foreground">
-                    {result.title}
-                  </h4>
-                  {result.price && (
-                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                      ₹{result.price.toLocaleString("en-IN")}
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs sm:text-sm text-foreground">
+                        {result.store} Cashback Link Ready
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Tracked
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                      SubID: {result.subId}
                     </p>
-                  )}
+                  </div>
                 </div>
+
+                <a
+                  href={result.affiliateUrl}
+                  onClick={handleShopClick}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto py-2.5 px-5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs flex items-center justify-center gap-1.5 shadow-md transition-transform active:scale-95 flex-shrink-0"
+                >
+                  Shop on {result.store}
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
               </div>
 
               {isGuest && (
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
                   <span className="text-[11px]">
-                    <strong>Tip:</strong> Sign in before purchasing so this order links to your wallet and scratch card!
+                    <strong>Tip:</strong> Sign in before completing your order so this purchase is automatically credited to your wallet & UPI ID!
                   </span>
                 </div>
               )}
 
-              <div>
-                <a
-                  href={result.affiliateUrl}
-                  onClick={handleShopClick}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3 px-4 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md flex items-center justify-center gap-2 text-xs sm:text-sm transition-transform active:scale-95"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Shop on {result.store} & Earn Scratch Card
-                </a>
-                <p className="text-[11px] text-center text-muted-foreground mt-2">
-                  Complete your order on {result.store} normally. Scratch card unlocks after return period.
-                </p>
-              </div>
+              <p className="text-[11px] text-center text-muted-foreground">
+                Shop on {result.store} normally. When your order is confirmed, your cashback unlocks in your CashDeals dashboard.
+              </p>
             </div>
           )}
         </div>
@@ -192,7 +181,7 @@ export function LinkConverterBox() {
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           targetUrl={url}
-          dealTitle={result.title}
+          dealTitle={`${result.store} Shopping Deal`}
           storeName={result.store}
         />
       )}

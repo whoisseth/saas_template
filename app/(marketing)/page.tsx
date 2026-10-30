@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { stores, deals, walletLedger, scratchCards } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { stores, walletLedger, scratchCards } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 import { LinkConverterBox } from "@/components/link-converter-box";
-import { DealCard } from "@/components/deal-card";
 import { StoreBrandBadge } from "@/components/store-brand-badge";
 import { getSession } from "@/lib/session";
 import {
@@ -12,16 +11,11 @@ import {
   ExternalLink,
   ShieldCheck,
   Zap,
-  Gift,
-  CheckCircle2,
-  Smartphone,
-  Trophy,
   Wallet,
-  Clock,
-  ArrowUpRight,
-  HelpCircle,
-  Copy,
+  Smartphone,
+  CheckCircle2,
   ChevronRight,
+  HelpCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +46,7 @@ export default async function HomePage() {
     }
   }
 
-  // Load active stores
+  // Load active partner stores
   let allStores: Array<typeof stores.$inferSelect> = [];
   try {
     allStores = await d
@@ -62,43 +56,6 @@ export default async function HomePage() {
       .limit(4);
   } catch (err) {
     console.error("Error loading stores:", err);
-  }
-
-  // Load featured deals with store names
-  let trendingDeals: Array<{
-    id: string;
-    title: string;
-    originalPrice: number;
-    discountedPrice: number;
-    discountPercent: number;
-    imageUrl: string;
-    targetUrl: string;
-    cashbackEstimate: string | null;
-    category: string;
-    storeName: string | null;
-  }> = [];
-
-  try {
-    trendingDeals = await d
-      .select({
-        id: deals.id,
-        title: deals.title,
-        originalPrice: deals.originalPrice,
-        discountedPrice: deals.discountedPrice,
-        discountPercent: deals.discountPercent,
-        imageUrl: deals.imageUrl,
-        targetUrl: deals.targetUrl,
-        cashbackEstimate: deals.cashbackEstimate,
-        category: deals.category,
-        storeName: stores.name,
-      })
-      .from(deals)
-      .leftJoin(stores, eq(deals.storeId, stores.id))
-      .where(eq(deals.isActive, true))
-      .orderBy(desc(deals.isFeatured), desc(deals.clicksCount))
-      .limit(8);
-  } catch (err) {
-    console.error("Error loading deals:", err);
   }
 
   return (
@@ -113,10 +70,10 @@ export default async function HomePage() {
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">
-                  Welcome, {session.user.name || session.user.email}!
+                  Welcome back, {session.user.name || session.user.email}!
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  Confirmed Balance: <span className="font-extrabold text-emerald-600 dark:text-emerald-400">₹{userConfirmedBalance.toFixed(2)}</span> • {userScratchCardsCount} Scratch Cards
+                  Confirmed Balance: <span className="font-extrabold text-emerald-600 dark:text-emerald-400">₹{userConfirmedBalance.toFixed(2)}</span> • {userScratchCardsCount} Scratch Cards Ready
                 </p>
               </div>
             </div>
@@ -136,38 +93,58 @@ export default async function HomePage() {
       <section className="relative pt-4 sm:pt-10 px-4 max-w-5xl mx-auto text-center space-y-5">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-          <span>Shop on Flipkart & Amazon • Earn Guaranteed UPI Cash</span>
+          <span>Shop on Flipkart & Amazon • Get Guaranteed UPI Cash</span>
         </div>
 
         <div className="space-y-3 max-w-2xl mx-auto">
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.15]">
             Shop Online. <br />
             <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 bg-clip-text text-transparent">
-              Earn Instant Scratch Cards.
+              Earn Real Cash to Your UPI.
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            Never shop without rewards again. Unlock guaranteed random ₹1–₹20 scratch cards and withdraw directly to your PhonePe or Google Pay UPI ID.
+            Never complete an order without cashback again. Paste any product link, buy normally on the store, and withdraw your cash directly to PhonePe or Google Pay.
           </p>
         </div>
 
-        {/* Live Link Converter Tool */}
+        {/* Live Link Converter Tool (Clean, verified, direct) */}
         <div className="pt-2">
           <LinkConverterBox />
         </div>
+
+        {/* Trust Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 max-w-3xl mx-auto text-center">
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-base sm:text-lg font-extrabold text-foreground">₹4,50,000+</span>
+            <span className="text-[11px] text-muted-foreground block">Cashback Paid</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400">₹50 Min</span>
+            <span className="text-[11px] text-muted-foreground block">Fast UPI Payout</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-base sm:text-lg font-extrabold text-foreground">15,000+</span>
+            <span className="text-[11px] text-muted-foreground block">Happy Shoppers</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-base sm:text-lg font-extrabold text-teal-600 dark:text-teal-400">100% Free</span>
+            <span className="text-[11px] text-muted-foreground block">Zero Hidden Fees</span>
+          </div>
+        </div>
       </section>
 
-      {/* Supported Shopping Stores (Crisp Inline Brand Logos) */}
+      {/* Supported Partner Stores (Crisp Vector Brand Badges) */}
       <section className="px-4 max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-emerald-500" />
             <h2 className="text-sm sm:text-base font-bold tracking-tight">
-              Top Partner Stores
+              Supported Shopping Platforms
             </h2>
           </div>
           <span className="text-[11px] text-muted-foreground font-medium">
-            Verified Commissions
+            Verified Cashback Rates
           </span>
         </div>
 
@@ -196,51 +173,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Trending Real Deals (Like Earnly) */}
-      <section className="px-4 max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" />
-            <h2 className="text-sm sm:text-base font-bold tracking-tight">
-              Trending Handpicked Deals
-            </h2>
-          </div>
-          <Link
-            href="/deals"
-            className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-          >
-            View All Deals <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          {trendingDeals.map((deal) => (
-            <DealCard
-              key={deal.id}
-              id={deal.id}
-              title={deal.title}
-              originalPrice={deal.originalPrice}
-              discountedPrice={deal.discountedPrice}
-              discountPercent={deal.discountPercent}
-              imageUrl={deal.imageUrl}
-              targetUrl={deal.targetUrl}
-              cashbackEstimate={deal.cashbackEstimate}
-              category={deal.category}
-              storeName={deal.storeName || "Flipkart"}
-              isLoggedIn={Boolean(session?.user)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* How Cashback Works in 3 Quick Steps */}
+      {/* How It Works (Short, 3 Clear Steps) */}
       <section className="px-4 max-w-5xl mx-auto">
         <div className="rounded-3xl border border-border bg-gradient-to-br from-card to-muted/20 p-6 sm:p-8 shadow-sm space-y-6">
           <div className="text-center space-y-1 max-w-md mx-auto">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Simple 3-Step Process
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">How You Get Rewarded</h2>
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">How Cashback Works</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
@@ -248,9 +188,9 @@ export default async function HomePage() {
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
                 1
               </span>
-              <h3 className="text-xs font-bold">Paste or Pick Any Deal</h3>
+              <h3 className="text-xs font-bold">Paste Any Product Link</h3>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Copy any Flipkart or Amazon product link and generate your tracked cashback link.
+                Find any product you want on Flipkart, Amazon, Myntra, or Ajio. Paste the link above.
               </p>
             </div>
 
@@ -258,26 +198,26 @@ export default async function HomePage() {
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 font-extrabold text-xs">
                 2
               </span>
-              <h3 className="text-xs font-bold">Shop Normally on App</h3>
+              <h3 className="text-xs font-bold">Buy on Merchant Normally</h3>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Complete your checkout on the merchant app. Your unique SubID automatically links to your wallet.
+                Click &apos;Shop on Store&apos;. Complete your purchase normally. We link your order via your SubID.
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-card border border-border/80 shadow-sm space-y-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold text-xs">
                 3
               </span>
-              <h3 className="text-xs font-bold">Scratch & UPI Payout</h3>
+              <h3 className="text-xs font-bold">Direct Cash to Your UPI</h3>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                When return period ends, scratch your card for ₹1–₹20 cash. Withdraw to PhonePe or GPay at ₹50!
+                Once the merchant confirms the order, your cash unlocks. Transfer to PhonePe/GPay at ₹50!
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* App Install CTA */}
+      {/* App Install Strip */}
       <section className="px-4 max-w-5xl mx-auto">
         <div className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex flex-col sm:flex-row items-center justify-between gap-5 shadow-lg shadow-emerald-700/15">
           <div className="space-y-1.5 text-center sm:text-left">
@@ -288,7 +228,7 @@ export default async function HomePage() {
               Install the CashDeals Web App
             </h2>
             <p className="text-xs text-emerald-100 max-w-md">
-              Add to your home screen for instant scratch card alerts, 1-tap link conversions, and fast UPI withdrawals.
+              Add to your home screen for instant cashback notifications, 1-tap link conversions, and fast UPI payouts.
             </p>
           </div>
 

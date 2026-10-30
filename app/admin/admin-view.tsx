@@ -176,6 +176,52 @@ export function AdminView({ metrics }: AdminViewProps) {
   const [inspectedUser, setInspectedUser] = useState<UserDeepDive | null>(null);
   const [isLoadingInspector, setIsLoadingInspector] = useState(false);
 
+  // Manual Order Verification state
+  const [manualSubId, setManualSubId] = useState("");
+  const [manualStore, setManualStore] = useState("Amazon");
+  const [manualOrderNum, setManualOrderNum] = useState("");
+  const [manualCommission, setManualCommission] = useState("75");
+  const [manualReward, setManualReward] = useState("20");
+  const [isVerifyingManual, setIsVerifyingManual] = useState(false);
+
+  async function handleManualVerifyOrder(e: React.FormEvent) {
+    e.preventDefault();
+    if (!manualSubId.trim()) {
+      toast.error("Please enter a SubID or User Email");
+      return;
+    }
+
+    setIsVerifyingManual(true);
+    try {
+      const res = await fetch("/api/admin/verify-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subId: manualSubId.trim().startsWith("u_") ? manualSubId.trim() : undefined,
+          userEmailOrId: !manualSubId.trim().startsWith("u_") ? manualSubId.trim() : undefined,
+          storeName: manualStore,
+          orderNumber: manualOrderNum.trim() || undefined,
+          commissionAmount: parseFloat(manualCommission) || 75,
+          userRewardAmount: parseFloat(manualReward) || 20,
+        }),
+      });
+
+      const data = (await res.json()) as { success?: boolean; message?: string; error?: string };
+      if (res.ok && data.success) {
+        toast.success(data.message || "Order verified and user wallet credited!");
+        setManualSubId("");
+        setManualOrderNum("");
+        fetchOverview();
+      } else {
+        toast.error(data.error || "Failed to verify order");
+      }
+    } catch {
+      toast.error("Connection error while verifying order");
+    } finally {
+      setIsVerifyingManual(false);
+    }
+  }
+
   async function handleInspectUser(userId: string) {
     setIsLoadingInspector(true);
     try {
@@ -426,7 +472,7 @@ export function AdminView({ metrics }: AdminViewProps) {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            CSV Reconcile
+            Verify Orders & CSV
           </button>
         </div>
       </div>
@@ -874,71 +920,229 @@ export function AdminView({ metrics }: AdminViewProps) {
         </div>
       )}
 
-      {/* TAB 4: EARNLY CSV RECONCILIATION */}
+      {/* TAB 4: MANUAL ORDER VERIFICATION & EARNLY CSV RECONCILIATION */}
       {activeTab === "reconcile" && (
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold">Earnly CSV Report Ingestion</h2>
-              <p className="text-xs text-muted-foreground">
-                Drag and drop your weekly transaction CSV export from the Earnly dashboard.
-              </p>
-            </div>
-            <button
-              onClick={downloadSampleCsv}
-              className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center gap-1.5 transition-colors"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Sample CSV
-            </button>
-          </div>
-
-          <form onSubmit={handleReconcileSubmit} className="space-y-4">
-            <div className="p-8 border-2 border-dashed border-border rounded-2xl text-center space-y-3 hover:border-emerald-500/50 transition-colors bg-muted/20">
-              <FileUp className="h-8 w-8 text-muted-foreground mx-auto" />
+        <div className="space-y-6">
+          {/* Section 1: Manual SubID / Order Verification */}
+          <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.02] p-6 shadow-sm space-y-5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
               <div>
-                <label className="text-xs font-bold text-foreground cursor-pointer hover:underline">
-                  <span>{csvFile ? csvFile.name : "Click to select Earnly CSV file"}</span>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    className="hidden"
-                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                  />
-                </label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Must include SubID, OrderID, and Commission columns
+                <h2 className="text-base font-bold text-foreground">Verify Individual Order & Credit User</h2>
+                <p className="text-xs text-muted-foreground">
+                  Found a purchase in your Amazon Associates or Earnly report? Enter the SubID or User Email to instantly credit the user&apos;s wallet with cashback.
                 </p>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={!csvFile || isReconciling}
-              className="w-full py-3.5 px-4 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 disabled:opacity-50"
-            >
-              {isReconciling ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Reconciling Orders & Issuing Scratch Cards...
-                </>
-              ) : (
-                "Run Auto-Reconciliation"
-              )}
-            </button>
-          </form>
+            <form onSubmit={handleManualVerifyOrder} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">
+                    SubID or User Email <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={manualSubId}
+                    onChange={(e) => setManualSubId(e.target.value)}
+                    placeholder="e.g. u_cm7x... or buyer@gmail.com"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    From your Amazon tag or Earnly report
+                  </p>
+                </div>
 
-          {reconcileResult && (
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 space-y-1 text-xs">
-              <p className="font-bold flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                {reconcileResult.message}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">Store Platform</label>
+                  <select
+                    value={manualStore}
+                    onChange={(e) => setManualStore(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                  >
+                    <option value="Amazon">Amazon.in</option>
+                    <option value="Flipkart">Flipkart</option>
+                    <option value="Myntra">Myntra</option>
+                    <option value="Ajio">Ajio</option>
+                    <option value="Other">Other / Earnly</option>
+                  </select>
+                  <p className="text-[10px] text-muted-foreground">Merchant of purchase</p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">Order ID / Ref (Optional)</label>
+                  <input
+                    type="text"
+                    value={manualOrderNum}
+                    onChange={(e) => setManualOrderNum(e.target.value)}
+                    placeholder="e.g. 402-819281-91823"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                  <p className="text-[10px] text-muted-foreground">For user audit trail</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">
+                    Affiliate Commission You Received (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={manualCommission}
+                    onChange={(e) => {
+                      const comm = e.target.value;
+                      setManualCommission(comm);
+                      const parsed = parseFloat(comm);
+                      if (!isNaN(parsed) && parsed > 0) {
+                        // Auto suggest ~27% reward to user
+                        const suggested = Math.max(5, Math.round(parsed * 0.27));
+                        setManualReward(suggested.toString());
+                      }
+                    }}
+                    placeholder="75.00"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Actual commission earned by CashDeals (you keep ≥70%)
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">
+                    Cashback Reward Credited to User (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    value={manualReward}
+                    onChange={(e) => setManualReward(e.target.value)}
+                    placeholder="20.00"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-600 dark:text-emerald-400"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Cashback credited directly into user&apos;s withdrawable wallet
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  <span>
+                    Crediting instantly confirms balance and awards a scratch card record to the user.
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isVerifyingManual}
+                  className="w-full sm:w-auto py-2.5 px-6 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-60"
+                >
+                  {isVerifyingManual ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Verifying & Crediting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Verify Order & Credit Wallet
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <div className="rounded-2xl border border-border bg-muted/30 p-3.5 text-xs text-muted-foreground space-y-1">
+              <p className="font-bold text-foreground flex items-center gap-1">
+                💡 How You Verify User Orders from Your Affiliate Accounts:
               </p>
-              <p className="text-[11px] opacity-90">
-                Matched: {reconcileResult.matched} orders • Unlocked {reconcileResult.scratchCardsIssued} scratch cards
-              </p>
+              <ul className="list-disc list-inside space-y-0.5 text-[11px] pl-1">
+                <li>
+                  <strong className="text-foreground">Amazon Associates:</strong> Go to Reports &rarr; Earnings Report &rarr; Tracking ID / SubID. Copy the <code className="px-1 py-0.5 rounded bg-muted font-mono font-bold">u_...</code> SubID.
+                </li>
+                <li>
+                  <strong className="text-foreground">Earnly.in:</strong> Open your Earnly Dashboard &rarr; Transactions. Copy the SubID or User Tag.
+                </li>
+                <li>
+                  Paste it in the box above, review the commission and reward, and hit <strong className="text-emerald-600 dark:text-emerald-400">Verify Order</strong>. Done!
+                </li>
+              </ul>
             </div>
-          )}
+          </div>
+
+          {/* Section 2: Earnly CSV Bulk Ingestion */}
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">Or Bulk Reconcile via CSV Report</h2>
+                <p className="text-xs text-muted-foreground">
+                  Drag and drop your weekly transaction CSV export from the Earnly dashboard.
+                </p>
+              </div>
+              <button
+                onClick={downloadSampleCsv}
+                className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center gap-1.5 transition-colors"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Sample CSV
+              </button>
+            </div>
+
+            <form onSubmit={handleReconcileSubmit} className="space-y-4">
+              <div className="p-8 border-2 border-dashed border-border rounded-2xl text-center space-y-3 hover:border-emerald-500/50 transition-colors bg-muted/20">
+                <FileUp className="h-8 w-8 text-muted-foreground mx-auto" />
+                <div>
+                  <label className="text-xs font-bold text-foreground cursor-pointer hover:underline">
+                    <span>{csvFile ? csvFile.name : "Click to select Earnly CSV file"}</span>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Must include SubID, OrderID, and Commission columns
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!csvFile || isReconciling}
+                className="w-full py-3.5 px-4 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-98 disabled:opacity-50"
+              >
+                {isReconciling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Reconciling Orders & Issuing Scratch Cards...
+                  </>
+                ) : (
+                  "Run Bulk CSV Reconciliation"
+                )}
+              </button>
+            </form>
+
+            {reconcileResult && (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 space-y-1 text-xs">
+                <p className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  {reconcileResult.message}
+                </p>
+                <p className="text-[11px] opacity-90">
+                  Matched: {reconcileResult.matched} orders • Unlocked {reconcileResult.scratchCardsIssued} scratch cards
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
