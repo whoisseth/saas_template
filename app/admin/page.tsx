@@ -39,6 +39,14 @@ export default async function AdminPage() {
           >
             Sign In with Admin Account
           </Link>
+          <form action="/api/auth/dev-admin" method="POST" className="pt-1">
+            <button
+              type="submit"
+              className="w-full py-2.5 px-4 rounded-xl font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+            >
+              ⚡ Fast Sign-In as Admin (Preview Mode)
+            </button>
+          </form>
         </div>
       </main>
     );
