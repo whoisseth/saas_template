@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Link2, ArrowRight, Sparkles, Loader2, Clipboard, ExternalLink, CheckCircle } from "lucide-react";
+import { Link2, ArrowRight, Sparkles, Loader2, Clipboard, ExternalLink, CheckCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
+import { AuthGuardModal } from "./auth-guard-modal";
 
 interface ConvertedResult {
   title: string;
@@ -18,6 +18,7 @@ export function LinkConverterBox() {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<ConvertedResult | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   async function handlePasteClipboard() {
     try {
@@ -59,6 +60,15 @@ export function LinkConverterBox() {
       toast.error("Connection error. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  const isGuest = result?.subId.startsWith("u_guest");
+
+  function handleShopClick(e: React.MouseEvent) {
+    if (isGuest && result) {
+      e.preventDefault();
+      setShowAuthModal(true);
     }
   }
 
@@ -117,7 +127,7 @@ export function LinkConverterBox() {
 
           {/* Converted Product Preview Result */}
           {result && (
-            <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="mt-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/50 border border-border/80">
                 <div className="relative h-16 w-16 rounded-xl overflow-hidden bg-background flex-shrink-0 border border-border">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -148,9 +158,19 @@ export function LinkConverterBox() {
                 </div>
               </div>
 
-              <div className="mt-3">
+              {isGuest && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
+                  <span className="text-[11px]">
+                    <strong>Tip:</strong> Sign in before purchasing so this order links to your wallet and scratch card!
+                  </span>
+                </div>
+              )}
+
+              <div>
                 <a
                   href={result.affiliateUrl}
+                  onClick={handleShopClick}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 px-4 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md flex items-center justify-center gap-2 text-xs sm:text-sm transition-transform active:scale-95"
@@ -166,6 +186,16 @@ export function LinkConverterBox() {
           )}
         </div>
       </div>
+
+      {result && (
+        <AuthGuardModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          targetUrl={url}
+          dealTitle={result.title}
+          storeName={result.store}
+        />
+      )}
     </div>
   );
 }

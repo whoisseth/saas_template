@@ -14,7 +14,14 @@ import {
   ExternalLink,
   PlusCircle,
   Download,
+  MousePointerClick,
+  Sparkles,
+  ArrowLeft,
+  Search,
+  Plus,
+  RefreshCw,
 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 interface AdminViewProps {
@@ -41,8 +48,50 @@ interface PayoutItem {
   qrCodeDataUrl?: string | null;
 }
 
+interface UserItem {
+  id: string;
+  name?: string | null;
+  email: string;
+  role: string;
+  createdAt: string;
+  image?: string | null;
+  ordersCount: number;
+  confirmedBalance: number;
+  scratchCardsCount: number;
+  lastActiveAt?: string | null;
+}
+
+interface DealItem {
+  id: string;
+  title: string;
+  originalPrice: number;
+  discountedPrice: number;
+  discountPercent: number;
+  clicksCount: number;
+  category: string;
+  isActive: boolean;
+  isFeatured: boolean;
+  imageUrl: string;
+  targetUrl: string;
+  storeName?: string | null;
+  storeLogo?: string | null;
+}
+
+interface ClickItem {
+  id: string;
+  subId: string;
+  originalUrl: string;
+  affiliateUrl: string;
+  ipAddress?: string | null;
+  createdAt: string;
+  userId?: string | null;
+  userName?: string | null;
+  userEmail?: string | null;
+  dealTitle?: string | null;
+}
+
 export function AdminView({ metrics }: AdminViewProps) {
-  const [activeTab, setActiveTab] = useState<"reconcile" | "payouts" | "deals">("payouts");
+  const [activeTab, setActiveTab] = useState<"payouts" | "reconcile" | "clicks" | "users">("payouts");
 
   // Reconcile state
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -59,8 +108,24 @@ export function AdminView({ metrics }: AdminViewProps) {
   const [utrInputs, setUtrInputs] = useState<Record<string, string>>({});
   const [processingId, setProcessingId] = useState<string | null>(null);
 
+  // Overview / Analytics state
+  const [usersList, setUsersList] = useState<UserItem[]>([]);
+  const [dealsList, setDealsList] = useState<DealItem[]>([]);
+  const [recentClicks, setRecentClicks] = useState<ClickItem[]>([]);
+  const [totalClicks, setTotalClicks] = useState<number>(0);
+  const [isLoadingOverview, setIsLoadingOverview] = useState(false);
+
+  // Quick Add Deal form state
+  const [newDealUrl, setNewDealUrl] = useState("");
+  const [newDealCategory, setNewDealCategory] = useState("Electronics");
+  const [isAddingDeal, setIsAddingDeal] = useState(false);
+
+  // Search filter
+  const [userSearch, setUserSearch] = useState("");
+
   useEffect(() => {
     fetchPayouts();
+    fetchOverview();
   }, []);
 
   async function fetchPayouts() {
@@ -75,6 +140,63 @@ export function AdminView({ metrics }: AdminViewProps) {
       toast.error("Failed to load payouts");
     } finally {
       setIsLoadingPayouts(false);
+    }
+  }
+
+  async function fetchOverview() {
+    setIsLoadingOverview(true);
+    try {
+      const res = await fetch("/api/admin/overview");
+      const data = (await res.json()) as {
+        success?: boolean;
+        users?: UserItem[];
+        deals?: DealItem[];
+        recentClicks?: ClickItem[];
+        totalClicks?: number;
+      };
+      if (data.success) {
+        setUsersList(data.users || []);
+        setDealsList(data.deals || []);
+        setRecentClicks(data.recentClicks || []);
+        setTotalClicks(data.totalClicks || 0);
+      }
+    } catch {
+      console.error("Failed to load overview");
+    } finally {
+      setIsLoadingOverview(false);
+    }
+  }
+
+  async function handleQuickAddDeal(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newDealUrl.trim() || !newDealUrl.startsWith("http")) {
+      toast.error("Please enter a valid product URL");
+      return;
+    }
+
+    setIsAddingDeal(true);
+    try {
+      const res = await fetch("/api/admin/deals/quick-add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: newDealUrl.trim(),
+          category: newDealCategory,
+        }),
+      });
+
+      const data = (await res.json()) as { success?: boolean; message?: string; error?: string };
+      if (res.ok && data.success) {
+        toast.success(data.message || "Deal added successfully!");
+        setNewDealUrl("");
+        fetchOverview();
+      } else {
+        toast.error(data.error || "Failed to add deal");
+      }
+    } catch {
+      toast.error("Connection error while adding deal");
+    } finally {
+      setIsAddingDeal(false);
     }
   }
 
@@ -102,6 +224,7 @@ export function AdminView({ metrics }: AdminViewProps) {
         setReconcileResult(data);
         toast.success(data.message);
         setCsvFile(null);
+        fetchOverview();
       } else {
         toast.error(data.error || "Failed to process CSV report");
       }
@@ -159,24 +282,45 @@ export function AdminView({ metrics }: AdminViewProps) {
     document.body.removeChild(link);
   }
 
+  const filteredUsers = usersList.filter((u) => {
+    if (!userSearch.trim()) return true;
+    const term = userSearch.toLowerCase();
+    return (
+      u.email.toLowerCase().includes(term) ||
+      (u.name && u.name.toLowerCase().includes(term)) ||
+      u.id.toLowerCase().includes(term)
+    );
+  });
+
   return (
     <div className="space-y-8">
-      {/* Top Header */}
+      {/* Top Header with Back Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-            Platform Administration
-          </span>
+        <div className="space-y-1">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-1"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Store
+          </Link>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              Platform Administration
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              Live
+            </span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
             CashDeals Admin Center
           </h1>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-muted border border-border">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-muted border border-border">
           <button
             onClick={() => setActiveTab("payouts")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "payouts"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -185,14 +329,34 @@ export function AdminView({ metrics }: AdminViewProps) {
             UPI Payouts ({metrics.pendingPayoutsCount})
           </button>
           <button
+            onClick={() => setActiveTab("clicks")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "clicks"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Clicks & Deals ({totalClicks})
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              activeTab === "users"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Users ({usersList.length || metrics.totalUsers})
+          </button>
+          <button
             onClick={() => setActiveTab("reconcile")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               activeTab === "reconcile"
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Earnly CSV Reconcile
+            CSV Reconcile
           </button>
         </div>
       </div>
@@ -231,8 +395,8 @@ export function AdminView({ metrics }: AdminViewProps) {
           <span className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1">
             <Users className="h-3.5 w-3.5 text-purple-500" /> Total Users
           </span>
-          <p className="text-xl font-extrabold">{metrics.totalUsers}</p>
-          <p className="text-[10px] text-muted-foreground">Registered accounts</p>
+          <p className="text-xl font-extrabold">{usersList.length || metrics.totalUsers}</p>
+          <p className="text-[10px] text-muted-foreground">Active accounts</p>
         </div>
       </div>
 
@@ -345,7 +509,287 @@ export function AdminView({ metrics }: AdminViewProps) {
         </div>
       )}
 
-      {/* TAB 2: EARNLY CSV RECONCILIATION */}
+      {/* TAB 2: CLICKS & DEALS ANALYTICS */}
+      {activeTab === "clicks" && (
+        <div className="space-y-6">
+          {/* Quick Add Deal Tool */}
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <Plus className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="text-base font-bold">Auto-Import Product Deal</h2>
+                <p className="text-xs text-muted-foreground">
+                  Paste any Flipkart or Amazon URL. The system automatically scrapes the title, image, price, and lists it for all users!
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleQuickAddDeal} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="url"
+                value={newDealUrl}
+                onChange={(e) => setNewDealUrl(e.target.value)}
+                placeholder="Paste Flipkart or Amazon product link..."
+                className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <select
+                value={newDealCategory}
+                onChange={(e) => setNewDealCategory(e.target.value)}
+                className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="Electronics">Electronics</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Smartphones">Smartphones</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+              <button
+                type="submit"
+                disabled={isAddingDeal}
+                className="py-2.5 px-5 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition-all active:scale-95 disabled:opacity-60 flex-shrink-0"
+              >
+                {isAddingDeal ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Fetching & Adding...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle className="h-3.5 w-3.5" />
+                    Add Deal
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Deals Clicks Ranking Table */}
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold flex items-center gap-2">
+                  <MousePointerClick className="h-4 w-4 text-emerald-500" />
+                  Product Clicks & Performance
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Ranked by total shopper clicks and interactions.
+                </p>
+              </div>
+              <button
+                onClick={fetchOverview}
+                className="p-1.5 rounded-lg border border-border hover:bg-muted text-muted-foreground transition-colors"
+                title="Refresh"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="pb-3 font-semibold">Product</th>
+                    <th className="pb-3 font-semibold">Store</th>
+                    <th className="pb-3 font-semibold">Price</th>
+                    <th className="pb-3 font-semibold text-right">Total Clicks</th>
+                    <th className="pb-3 font-semibold text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {dealsList.map((deal) => (
+                    <tr key={deal.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-3 pr-3">
+                        <div className="flex items-center gap-2.5">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={deal.imageUrl}
+                            alt={deal.title}
+                            className="h-9 w-9 rounded-lg object-cover bg-muted flex-shrink-0"
+                          />
+                          <span className="font-semibold text-foreground line-clamp-1 max-w-xs">
+                            {deal.title}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span className="px-2 py-0.5 rounded-md font-bold text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                          {deal.storeName || "Store"}
+                        </span>
+                      </td>
+                      <td className="py-3 font-semibold">
+                        ₹{deal.discountedPrice.toLocaleString("en-IN")}
+                      </td>
+                      <td className="py-3 text-right">
+                        <span className="font-extrabold text-foreground px-2 py-0.5 rounded bg-muted">
+                          {deal.clicksCount}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <a
+                          href={`/api/redirect?url=${encodeURIComponent(deal.targetUrl)}&dealId=${deal.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
+                        >
+                          Test Link <ExternalLink className="h-2.5 w-2.5" />
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Recent Live Clicks Stream */}
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-4">
+            <h2 className="text-base font-bold flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Live Shopper Click Activity Stream
+            </h2>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="pb-3 font-semibold">Time</th>
+                    <th className="pb-3 font-semibold">SubID</th>
+                    <th className="pb-3 font-semibold">User</th>
+                    <th className="pb-3 font-semibold">Deal / Target URL</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {recentClicks.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-6 text-center text-muted-foreground">
+                        No clicks logged yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    recentClicks.map((click) => (
+                      <tr key={click.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-2.5 text-muted-foreground text-[11px] whitespace-nowrap">
+                          {new Date(click.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                        </td>
+                        <td className="py-2.5 font-mono text-[11px] text-foreground font-semibold">
+                          {click.subId}
+                        </td>
+                        <td className="py-2.5 text-[11px]">
+                          {click.userName || click.userEmail ? (
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              {click.userName || click.userEmail}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground italic">Guest</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 max-w-sm truncate text-[11px]">
+                          {click.dealTitle || click.originalUrl}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: REGISTERED USERS DIRECTORY */}
+      {activeTab === "users" && (
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">Registered Users & Activity</h2>
+              <p className="text-xs text-muted-foreground">
+                View all signed-up accounts, total orders tracked, wallet balances, and rewards.
+              </p>
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                placeholder="Search user by name/email..."
+                className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="pb-3 font-semibold">User</th>
+                  <th className="pb-3 font-semibold">Role</th>
+                  <th className="pb-3 font-semibold">Joined Date</th>
+                  <th className="pb-3 font-semibold text-right">Orders</th>
+                  <th className="pb-3 font-semibold text-right">Scratch Cards</th>
+                  <th className="pb-3 font-semibold text-right">Confirmed Balance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No matching users found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center flex-shrink-0 text-xs">
+                            {u.name?.slice(0, 1) || u.email.slice(0, 1).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">{u.name || "User"}</p>
+                            <p className="text-[11px] text-muted-foreground">{u.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            u.role === "admin"
+                              ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="py-3 text-muted-foreground text-[11px]">
+                        {new Date(u.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3 text-right font-semibold">{u.ordersCount}</td>
+                      <td className="py-3 text-right font-semibold">{u.scratchCardsCount}</td>
+                      <td className="py-3 text-right font-extrabold text-emerald-600 dark:text-emerald-400">
+                        ₹{u.confirmedBalance.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: EARNLY CSV RECONCILIATION */}
       {activeTab === "reconcile" && (
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-6">
           <div className="flex items-center justify-between">

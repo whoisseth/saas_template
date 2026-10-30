@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { stores, deals } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { LinkConverterBox } from "@/components/link-converter-box";
+import { DealCard } from "@/components/deal-card";
+import { getSession } from "@/lib/session";
 import {
   Sparkles,
   ArrowRight,
@@ -23,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const d = db();
+  const session = await getSession();
 
   // Load active stores
   let allStores: Array<typeof stores.$inferSelect> = [];
@@ -36,12 +39,36 @@ export default async function HomePage() {
     console.error("Error loading stores:", err);
   }
 
-  // Load featured deals
-  let trendingDeals: Array<typeof deals.$inferSelect> = [];
+  // Load featured deals with store name
+  let trendingDeals: Array<{
+    id: string;
+    title: string;
+    originalPrice: number;
+    discountedPrice: number;
+    discountPercent: number;
+    imageUrl: string;
+    targetUrl: string;
+    cashbackEstimate: string | null;
+    category: string;
+    storeName: string | null;
+  }> = [];
+
   try {
     trendingDeals = await d
-      .select()
+      .select({
+        id: deals.id,
+        title: deals.title,
+        originalPrice: deals.originalPrice,
+        discountedPrice: deals.discountedPrice,
+        discountPercent: deals.discountPercent,
+        imageUrl: deals.imageUrl,
+        targetUrl: deals.targetUrl,
+        cashbackEstimate: deals.cashbackEstimate,
+        category: deals.category,
+        storeName: stores.name,
+      })
       .from(deals)
+      .leftJoin(stores, eq(deals.storeId, stores.id))
       .where(eq(deals.isActive, true))
       .orderBy(desc(deals.isFeatured), desc(deals.clicksCount))
       .limit(8);
@@ -249,59 +276,20 @@ export default async function HomePage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
           {trendingDeals.map((deal) => (
-            <div
+            <DealCard
               key={deal.id}
-              className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-emerald-500/40 transition-all flex flex-col group"
-            >
-              <div className="relative aspect-square w-full bg-muted overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={deal.imageUrl}
-                  alt={deal.title}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-rose-600 text-white shadow-sm">
-                  {deal.discountPercent}% OFF
-                </span>
-                {deal.cashbackEstimate && (
-                  <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-600 text-white shadow-sm">
-                    {deal.cashbackEstimate}
-                  </span>
-                )}
-              </div>
-
-              <div className="p-3.5 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block">
-                    {deal.category}
-                  </span>
-                  <h3 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-snug">
-                    {deal.title}
-                  </h3>
-                </div>
-
-                <div className="pt-2 border-t border-border flex items-baseline justify-between">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-sm sm:text-base font-extrabold text-foreground">
-                      ₹{deal.discountedPrice.toLocaleString("en-IN")}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground line-through">
-                      ₹{deal.originalPrice.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-
-                <a
-                  href={`/api/redirect?url=${encodeURIComponent(deal.targetUrl)}&dealId=${deal.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2 px-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs flex items-center justify-center gap-1.5 shadow-sm transition-transform active:scale-95"
-                >
-                  Shop & Earn
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
+              id={deal.id}
+              title={deal.title}
+              originalPrice={deal.originalPrice}
+              discountedPrice={deal.discountedPrice}
+              discountPercent={deal.discountPercent}
+              imageUrl={deal.imageUrl}
+              targetUrl={deal.targetUrl}
+              cashbackEstimate={deal.cashbackEstimate}
+              category={deal.category}
+              storeName={deal.storeName || "Flipkart"}
+              isLoggedIn={Boolean(session?.user)}
+            />
           ))}
         </div>
       </section>

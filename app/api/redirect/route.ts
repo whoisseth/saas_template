@@ -9,11 +9,27 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const targetUrl = searchParams.get("url");
+  let targetUrl = searchParams.get("url");
   const dealId = searchParams.get("dealId");
   const storeId = searchParams.get("storeId");
 
-  if (!targetUrl) {
+  const d = db();
+
+  // Edge case: if URL is not provided in query param but dealId is present, lookup the deal's targetUrl
+  if (!targetUrl && dealId) {
+    try {
+      const dealRecord = await d.query.deals.findFirst({
+        where: eq(deals.id, dealId),
+      });
+      if (dealRecord?.targetUrl) {
+        targetUrl = dealRecord.targetUrl;
+      }
+    } catch (err) {
+      console.error("Error looking up deal for redirect:", err);
+    }
+  }
+
+  if (!targetUrl || !targetUrl.startsWith("http")) {
     return NextResponse.redirect(new URL("/", req.url));
   }
 

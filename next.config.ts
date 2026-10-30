@@ -6,6 +6,7 @@ initOpenNextCloudflareForDev();
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  devIndicators: false,
   serverExternalPackages: ["sharp"],
   images: {
     unoptimized: true,
