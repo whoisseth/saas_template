@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/session";
 import { db } from "@/lib/db";
 import { orders, scratchCards, walletLedger, payoutRequests } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { WalletView } from "./wallet-view";
 import Link from "next/link";
 import { LogIn, ArrowLeft, Sparkles, LayoutDashboard } from "lucide-react";
@@ -53,7 +53,7 @@ export default async function WalletPage() {
       total: sql<number>`COALESCE(SUM(${orders.userRewardAmount}), 0)`,
     })
     .from(orders)
-    .where(eq(orders.userId, session.user.id));
+    .where(and(eq(orders.userId, session.user.id), eq(orders.status, "TRACKED")));
   const pendingCashback = pendingRows[0]?.total || 0;
 
   const userScratchCards = await d
