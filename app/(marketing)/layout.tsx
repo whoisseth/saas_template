@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { Sparkles, Wallet, Smartphone, ShieldCheck } from "lucide-react";
+import { Sparkles, LayoutDashboard, Smartphone, ShieldCheck, ArrowRight } from "lucide-react";
 import { PwaSmartBanner } from "@/components/pwa-smart-banner";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground antialiased selection:bg-emerald-500 selection:text-white">
-      {/* PWA Smart Banner */}
+      {/* Non-intrusive Mobile PWA Floating Card (Only appears on mobile scroll) */}
       <PwaSmartBanner />
 
-      {/* Sticky Header */}
+      {/* Clean Sticky Header (No fixed top notification) */}
       <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur-md">
         <nav className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2 group">
@@ -27,9 +27,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             <Link href="/deals" className="text-muted-foreground hover:text-foreground transition-colors">
               Hot Deals
             </Link>
-            <Link href="/wallet" className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
-              <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              My Wallet
+            <Link href="/dashboard" className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
+              <LayoutDashboard className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              Dashboard
             </Link>
             <Link href="/app" className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors">
               <Smartphone className="h-4 w-4 text-teal-600 dark:text-teal-400" />
@@ -39,11 +39,11 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
           <div className="flex items-center gap-2.5">
             <Link
-              href="/wallet"
+              href="/dashboard"
               className="px-3.5 py-1.5 rounded-xl font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-xs flex items-center gap-1.5 transition-all"
             >
-              <Wallet className="h-3.5 w-3.5" />
-              Wallet
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              My Dashboard
             </Link>
             <Link
               href="/sign-in"

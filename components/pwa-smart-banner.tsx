@@ -3,23 +3,19 @@
 import React, { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, Smartphone, ArrowRight, Sparkles } from "lucide-react";
+import { X, Smartphone, Download } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-const DISMISSAL_KEY = "cashdeals_pwa_smart_banner_dismissed_until";
-const COOLDOWN_DAYS = 14;
-
-interface PwaSmartBannerProps {
-  delayMs?: number;
-}
+const DISMISSAL_KEY = "cashdeals_pwa_dismissed_v2";
+const COOLDOWN_DAYS = 30;
 
 const emptySubscribe = () => () => {};
 
-export function PwaSmartBanner({ delayMs = 4000 }: PwaSmartBannerProps) {
+export function PwaSmartBanner() {
   const pathname = usePathname();
   const isClient = useSyncExternalStore(
     emptySubscribe,
@@ -28,48 +24,43 @@ export function PwaSmartBanner({ delayMs = 4000 }: PwaSmartBannerProps) {
   );
 
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. If running in standalone mode (already installed), never show banner
+    // Do not show on desktop, only mobile/tablet
+    const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+    if (!isMobile) return;
+
+    // Never show if already running in standalone PWA mode
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as unknown as { standalone?: boolean }).standalone === true;
-
     if (isStandalone) return;
 
-    // 2. If on the dedicated /app page, never show banner
+    // Never show on the dedicated /app page
     if (pathname === "/app") return;
 
-    // 3. Check cooldown
+    // Check dismissal cooldown
     try {
       const dismissedUntil = localStorage.getItem(DISMISSAL_KEY);
       if (dismissedUntil && Number(dismissedUntil) > Date.now()) {
         return;
       }
     } catch {
-      // Storage access blocked in incognito
+      // Storage blocked
     }
 
-    let triggered = false;
-    function triggerBanner() {
-      if (triggered) return;
-      triggered = true;
-      setShowBanner(true);
-    }
-
-    const timer = setTimeout(triggerBanner, delayMs);
-
-    function handleScroll() {
-      if (window.scrollY > 150) {
-        triggerBanner();
-        window.removeEventListener("scroll", handleScroll);
+    // Gentle delay after user scrolls or interacts (non-intrusive)
+    function onScroll() {
+      if (window.scrollY > 250) {
+        setShowPrompt(true);
+        window.removeEventListener("scroll", onScroll);
       }
     }
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     function handleBeforeInstallPrompt(e: Event) {
       e.preventDefault();
@@ -79,30 +70,29 @@ export function PwaSmartBanner({ delayMs = 4000 }: PwaSmartBannerProps) {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
-  }, [delayMs, pathname]);
+  }, [pathname]);
 
-  if (!isClient || !showBanner) return null;
+  if (!isClient || !showPrompt) return null;
 
-  async function handleInstallClick() {
+  async function handleInstall() {
     if (deferredPrompt) {
       try {
         await deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
         if (choice.outcome === "accepted") {
-          setShowBanner(false);
+          setShowPrompt(false);
         }
       } catch {
-        // Fallback to /app page
+        // Fallback
       }
     }
   }
 
   function handleDismiss() {
-    setShowBanner(false);
+    setShowPrompt(false);
     try {
       const expiry = Date.now() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
       localStorage.setItem(DISMISSAL_KEY, String(expiry));
@@ -112,52 +102,50 @@ export function PwaSmartBanner({ delayMs = 4000 }: PwaSmartBannerProps) {
   }
 
   return (
-    <aside
-      aria-label="Install CashDeals App"
-      className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-lg animate-in slide-in-from-top-4 duration-300"
+    <div
+      aria-label="Install App Prompt"
+      className="fixed bottom-20 left-4 right-4 z-40 max-w-sm mx-auto sm:hidden animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto"
     >
-      <div className="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between gap-3 text-xs sm:text-sm">
+      <div className="rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl p-3 shadow-2xl flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-8 w-8 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-600/20">
+            <Smartphone className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="font-bold truncate text-white leading-tight">
-              CashDeals Mobile App
-            </p>
-            <p className="text-[11px] text-white/80 truncate hidden xs:block">
-              1-Tap install for faster rewards & notifications
+            <p className="font-bold text-foreground truncate">Install CashDeals App</p>
+            <p className="text-[10px] text-muted-foreground truncate">
+              0 MB space • Instant scratch cards
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {deferredPrompt ? (
             <button
-              onClick={handleInstallClick}
-              className="py-1 px-3 rounded-lg bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shadow-sm active:scale-95"
+              onClick={handleInstall}
+              className="py-1.5 px-3 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shadow-sm active:scale-95 flex items-center gap-1"
             >
-              Install App
+              <Download className="h-3 w-3" />
+              Install
             </button>
           ) : (
             <Link
               href="/app"
-              className="py-1 px-3 rounded-lg bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shadow-sm flex items-center gap-1 active:scale-95"
+              className="py-1.5 px-3 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shadow-sm active:scale-95"
             >
               Get App
-              <ArrowRight className="h-3 w-3" />
             </Link>
           )}
 
           <button
             onClick={handleDismiss}
-            aria-label="Dismiss banner"
-            className="p-1 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+            aria-label="Close"
+            className="p-1 rounded-full text-muted-foreground hover:bg-muted transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

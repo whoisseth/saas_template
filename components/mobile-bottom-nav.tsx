@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sparkles, Wallet, Link as LinkIcon, Smartphone } from "lucide-react";
+import { Home, Sparkles, LayoutDashboard, Link as LinkIcon, Smartphone } from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { name: "Home", href: "/", icon: Home },
   { name: "Deals", href: "/deals", icon: Sparkles },
   { name: "Convert", href: "/#convert", icon: LinkIcon, isSpecial: true },
-  { name: "Wallet", href: "/wallet", icon: Wallet },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Get App", href: "/app", icon: Smartphone },
 ];
 

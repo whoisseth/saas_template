@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@/components/analytics";
-import { ConsentBanner } from "@/components/consent-banner";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/json-ld";
 import { Toaster } from "sonner";
 import { env } from "@/lib/env";
@@ -57,7 +56,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="light">
           {children}
           <Toaster position="top-center" richColors closeButton />
-          <ConsentBanner />
           <Analytics />
           <OrganizationJsonLd />
           <WebSiteJsonLd />

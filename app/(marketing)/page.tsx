@@ -13,6 +13,10 @@ import {
   CheckCircle2,
   Smartphone,
   Trophy,
+  Wallet,
+  Clock,
+  ArrowUpRight,
+  HelpCircle,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -45,30 +49,69 @@ export default async function HomePage() {
     console.error("Error loading deals:", err);
   }
 
+  const faqs = [
+    {
+      q: "How does CashDeals give real cashback for free?",
+      a: "When you shop through our links, merchants like Flipkart and Amazon pay us an affiliate commission for bringing them customers. Instead of keeping it all, we share a guaranteed portion (₹1 to ₹20) with you via random scratch cards!",
+    },
+    {
+      q: "When does my scratch card unlock?",
+      a: "Your order is tracked within 24 to 48 hours. Once the merchant's 7–15 day return and replacement window passes and the order is confirmed, your scratch card automatically unlocks in your dashboard.",
+    },
+    {
+      q: "How do I withdraw my earnings?",
+      a: "As soon as your confirmed wallet balance reaches ₹50, simply enter your UPI ID (Google Pay, PhonePe, Paytm, or BHIM) and submit a withdrawal request. Our admin team transfers the cash directly to your bank account within 24–48 hours.",
+    },
+    {
+      q: "Can I buy ANY product on Flipkart or Amazon?",
+      a: "Yes! Simply copy the product link from the Flipkart or Amazon app, paste it into our search bar at the top, and click 'Generate Cashback Link'. Every regular shopping item is eligible.",
+    },
+  ];
+
   return (
-    <div className="space-y-12 sm:space-y-16">
+    <div className="space-y-12 sm:space-y-20">
       {/* Hero Section */}
-      <section className="relative pt-6 sm:pt-12 px-4 max-w-6xl mx-auto text-center space-y-6">
+      <section className="relative pt-6 sm:pt-14 px-4 max-w-6xl mx-auto text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-300">
           <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-          <span>Earn Extra Guaranteed Cash on Every Flipkart & Amazon Order</span>
+          <span>India&apos;s #1 Guaranteed Shopping Rewards Platform</span>
         </div>
 
-        <div className="space-y-3 max-w-3xl mx-auto">
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.15]">
-            Shop Online. <br className="hidden sm:inline" />
+        <div className="space-y-4 max-w-3xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.12]">
+            Shop on Flipkart & Amazon. <br />
             <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 bg-clip-text text-transparent">
-              Earn Instant Scratch Cards.
+              Earn Real Cash to Your UPI.
             </span>
           </h1>
-          <p className="text-xs sm:text-base text-muted-foreground max-w-xl mx-auto">
-            Never shop without rewards again. Unlock guaranteed random ₹1–₹20 scratch cards and withdraw directly to your PhonePe or Google Pay UPI ID.
+          <p className="text-xs sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Never complete an order without cashback again. Get guaranteed random ₹1–₹20 scratch cards on every purchase. Minimum ₹50 direct withdrawal to PhonePe or Google Pay.
           </p>
         </div>
 
         {/* Live Link Converter Hero Tool */}
         <div className="pt-2">
           <LinkConverterBox />
+        </div>
+
+        {/* Live Trust Metrics Ticker */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 max-w-3xl mx-auto text-center">
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-lg sm:text-xl font-extrabold text-foreground">₹4,50,000+</span>
+            <span className="text-[11px] text-muted-foreground block">Cashback Transferred</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-lg sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400">₹50 Min</span>
+            <span className="text-[11px] text-muted-foreground block">Fast UPI Payouts</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-lg sm:text-xl font-extrabold text-foreground">15,000+</span>
+            <span className="text-[11px] text-muted-foreground block">Happy Shoppers</span>
+          </div>
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border/80">
+            <span className="text-lg sm:text-xl font-extrabold text-teal-600 dark:text-teal-400">100% Free</span>
+            <span className="text-[11px] text-muted-foreground block">Zero Hidden Fees</span>
+          </div>
         </div>
       </section>
 
@@ -78,11 +121,11 @@ export default async function HomePage() {
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-emerald-500" />
             <h2 className="text-base sm:text-lg font-bold tracking-tight">
-              Top Partner Stores
+              Supported Shopping Platforms
             </h2>
           </div>
           <span className="text-xs text-muted-foreground font-medium">
-            Verified Commissions
+            Active Cashback Rates
           </span>
         </div>
 
@@ -108,10 +151,82 @@ export default async function HomePage() {
                 {store.cashbackText}
               </span>
               <span className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1 opacity-80 group-hover:opacity-100">
-                Shop Now <ExternalLink className="h-2.5 w-2.5" />
+                Shop Store <ExternalLink className="h-2.5 w-2.5" />
               </span>
             </a>
           ))}
+        </div>
+      </section>
+
+      {/* 5-Step Visual Workflow Infographic (Matching Plan) */}
+      <section className="px-4 max-w-6xl mx-auto">
+        <div className="rounded-3xl border border-border bg-gradient-to-br from-card via-muted/20 to-card p-6 sm:p-10 shadow-sm space-y-8">
+          <div className="text-center space-y-2 max-w-lg mx-auto">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              Transparent 5-Step Process
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">How Your Cashback Works</h2>
+            <p className="text-xs text-muted-foreground">
+              From picking your deal to receiving funds in your bank account via UPI.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 text-center">
+            {/* Step 1 */}
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm space-y-2.5 relative">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
+                1
+              </span>
+              <h3 className="text-xs font-bold">Browse or Paste</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Pick a deal or paste any product link into CashDeals.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm space-y-2.5 relative">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 font-extrabold text-xs">
+                2
+              </span>
+              <h3 className="text-xs font-bold">Shop on Store</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Buy on Flipkart or Amazon app normally. We track your SubID.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm space-y-2.5 relative">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-extrabold text-xs">
+                3
+              </span>
+              <h3 className="text-xs font-bold">Return Window Clears</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Order status is verified once the 7–15 day return window ends.
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm space-y-2.5 relative">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
+                4
+              </span>
+              <h3 className="text-xs font-bold">Scratch & Win</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Unlock an interactive scratch card with ₹1 to ₹20 instant cash.
+              </p>
+            </div>
+
+            {/* Step 5 */}
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-sm space-y-2.5 relative">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 font-extrabold text-xs">
+                5
+              </span>
+              <h3 className="text-xs font-bold">UPI Bank Payout</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Reach ₹50 and transfer money directly to PhonePe or GPay!
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -128,7 +243,7 @@ export default async function HomePage() {
             href="/deals"
             className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
           >
-            View All <ArrowRight className="h-3 w-3" />
+            View All Deals <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
 
@@ -191,55 +306,35 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3-Step "How It Works" Section */}
-      <section className="px-4 max-w-6xl mx-auto">
-        <div className="rounded-3xl border border-border bg-muted/30 p-6 sm:p-10 space-y-8">
-          <div className="text-center space-y-2 max-w-md mx-auto">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Simple 3-Step Flow
-            </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold">How CashDeals Works</h2>
-            <p className="text-xs text-muted-foreground">
-              Guaranteed real cash rewards in 3 easy steps. No coupon gimmicks.
-            </p>
-          </div>
+      {/* Frequently Asked Questions (FAQ) */}
+      <section className="px-4 max-w-4xl mx-auto space-y-6">
+        <div className="text-center space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            Got Questions?
+          </span>
+          <h2 className="text-2xl font-extrabold tracking-tight">Frequently Asked Questions</h2>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="p-5 rounded-2xl bg-card border border-border text-center space-y-3 shadow-sm">
-              <div className="h-12 w-12 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-extrabold text-lg">
-                1
-              </div>
-              <h3 className="text-sm font-bold">Pick Deal or Paste Link</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Browse our curated deals or paste any link from Flipkart, Amazon, or Myntra to activate tracking.
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => (
+            <div
+              key={idx}
+              className="p-5 rounded-2xl border border-border bg-card shadow-sm space-y-2 text-left"
+            >
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                {faq.q}
+              </h3>
+              <p className="text-xs text-muted-foreground leading-relaxed pl-6">
+                {faq.a}
               </p>
             </div>
-
-            <div className="p-5 rounded-2xl bg-card border border-border text-center space-y-3 shadow-sm">
-              <div className="h-12 w-12 mx-auto rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-extrabold text-lg">
-                2
-              </div>
-              <h3 className="text-sm font-bold">Shop Normally</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Complete your order on the merchant app or website. Our system tracks your order automatically via SubID.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-card border border-border text-center space-y-3 shadow-sm">
-              <div className="h-12 w-12 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-extrabold text-lg">
-                3
-              </div>
-              <h3 className="text-sm font-bold">Scratch & Withdraw UPI</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Unlock your random ₹1–₹20 scratch card once the return window passes, and transfer money directly to your UPI.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* App Install Banner CTA */}
-      <section className="px-4 max-w-6xl mx-auto pb-8">
+      <section className="px-4 max-w-6xl mx-auto pb-10">
         <div className="rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-emerald-700/20">
           <div className="space-y-2 text-center sm:text-left">
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20 text-white backdrop-blur-sm">
