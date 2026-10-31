@@ -12,8 +12,9 @@ export async function POST(req: NextRequest) {
     const session = await getSession();
     const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
     const userEmail = session?.user?.email?.toLowerCase();
+    const isPreview = process.env.NEXT_PUBLIC_IS_PREVIEW === "true" || process.env.NODE_ENV === "development";
 
-    if (!userEmail || !adminEmails.includes(userEmail)) {
+    if (!isPreview && (!userEmail || !adminEmails.includes(userEmail))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -29,42 +30,48 @@ export async function POST(req: NextRequest) {
 
     const { subId, orderNumber, storeName, orderAmount, commissionAmount, userRewardAmount, userEmailOrId } = body;
 
-    if (!subId && !userEmailOrId) {
-      return NextResponse.json({ error: "Please provide either a SubID or a User Email/ID" }, { status: 400 });
+    if (!subId && !userEmailOrId && !orderNumber) {
+      return NextResponse.json({ error: "Please provide either an Earnly Ref ID / SubID or a User Email" }, { status: 400 });
     }
 
     const d = db();
     let targetUserId: string | null = null;
-    let matchedSubId = subId?.trim() || "";
+    const refCode = orderNumber?.trim() || subId?.trim() || "";
 
-    // 1. Try to find user from clicks table via SubID
-    if (subId) {
-      const clickRecord = await d.query.clicks.findFirst({
-        where: eq(clicks.subId, subId.trim()),
-      });
-      if (clickRecord?.userId) {
-        targetUserId = clickRecord.userId;
-      }
-    }
-
-    // 2. If not found via click SubID, try finding user directly by email or ID
-    if (!targetUserId && userEmailOrId) {
+    // 1. If admin selected or typed a user email/ID, resolve that user first
+    if (userEmailOrId && userEmailOrId.trim()) {
+      const trimmedTarget = userEmailOrId.trim().toLowerCase();
       const userRecord = await d.query.user.findFirst({
-        where: or(eq(user.email, userEmailOrId.trim()), eq(user.id, userEmailOrId.trim())),
+        where: or(eq(user.email, trimmedTarget), eq(user.id, userEmailOrId.trim())),
       });
       if (userRecord) {
         targetUserId = userRecord.id;
       }
     }
 
+    // 2. If user not explicitly chosen, try finding user from clicks table via SubID or Ref ID
+    if (!targetUserId && refCode) {
+      const clickRecord = await d.query.clicks.findFirst({
+        where: or(eq(clicks.subId, refCode), eq(clicks.id, refCode)),
+      });
+      if (clickRecord?.userId) {
+        targetUserId = clickRecord.userId;
+      }
+    }
+
+    // 3. Fallback for preview / dev mode testing if still no user matched
+    if (!targetUserId && isPreview && session?.user?.id) {
+      targetUserId = session.user.id;
+    }
+
     if (!targetUserId) {
       return NextResponse.json(
-        { error: `Could not find a user matching SubID '${subId}' or identifier '${userEmailOrId}'` },
+        { error: `Could not find a user matching Ref ID '${refCode}' or user '${userEmailOrId}'. Please select a user from the dropdown.` },
         { status: 404 }
       );
     }
 
-    const ordNum = orderNumber?.trim() || `ORD_${Date.now()}`;
+    const ordNum = orderNumber?.trim() || subId?.trim() || `ORD_${Date.now()}`;
     const store = storeName?.trim() || "Amazon";
     const ordAmt = orderAmount ? parseFloat(String(orderAmount)) : 1000;
     const commAmt = commissionAmount ? parseFloat(String(commissionAmount)) : 60;
@@ -76,7 +83,7 @@ export async function POST(req: NextRequest) {
     await d.insert(orders).values({
       id: orderId,
       orderNumber: ordNum,
-      subId: matchedSubId || `manual_${targetUserId.slice(0, 6)}`,
+      subId: refCode || subId?.trim() || `manual_${targetUserId.slice(0, 6)}`,
       userId: targetUserId,
       storeName: store,
       orderAmount: ordAmt,

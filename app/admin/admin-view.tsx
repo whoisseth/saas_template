@@ -806,14 +806,30 @@ export function AdminView({ metrics }: AdminViewProps) {
                         <td className="py-2.5 max-w-xs truncate text-[11px]">
                           {click.dealTitle || click.originalUrl}
                         </td>
-                        <td className="py-2.5 text-right">
+                        <td className="py-2.5 text-right whitespace-nowrap">
+                          <button
+                            onClick={() => {
+                              setActiveTab("reconcile");
+                              setManualUserEmail(click.userEmail || "");
+                              setManualSubId(click.subId || "");
+                              if (click.dealTitle?.toLowerCase().includes("flipkart") || click.originalUrl?.includes("flipkart")) {
+                                setManualStore("Flipkart");
+                              } else {
+                                setManualStore("Amazon");
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] mr-2 transition-colors"
+                            title="Pre-fill Verify Order form for this shopper click"
+                          >
+                            + Match & Verify
+                          </button>
                           <a
                             href={click.affiliateUrl || click.originalUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                            className="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-0.5 font-semibold"
                           >
-                            Open Link <ExternalLink className="h-2.5 w-2.5" />
+                            Link <ExternalLink className="h-2.5 w-2.5" />
                           </a>
                         </td>
                       </tr>
@@ -1516,7 +1532,7 @@ export function AdminView({ metrics }: AdminViewProps) {
                   </div>
                 )}
 
-                {/* SCENE 3: EARNLY TRANSACTION REPORT */}
+                {/* SCENE 3: EARNLY TRANSACTION & CLICK HISTORY REPORT */}
                 {storyStep === 3 && (
                   <div className="space-y-6 animate-in fade-in duration-200">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-4">
@@ -1525,63 +1541,132 @@ export function AdminView({ metrics }: AdminViewProps) {
                           SCENE 3 OF 6
                         </span>
                         <h3 className="text-lg font-bold text-foreground">
-                          Earnly.in / Merchant Registers Verified Sale
+                          Earnly.in Registers Click & Flipkart Verified Transaction
                         </h3>
                       </div>
                       <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-xl">
-                        Affiliate Portal: <code className="font-mono text-foreground font-bold">earnly.in / Amazon Associates</code>
+                        Affiliate Portal: <code className="font-mono text-foreground font-bold">earnly.in (Publisher Portal)</code>
                       </span>
                     </div>
 
-                    {/* Realistic UI Mockup: Earnly Report Table */}
-                    <div className="rounded-2xl border-2 border-muted bg-card p-4 sm:p-6 text-foreground space-y-4 shadow-sm border border-border">
+                    {/* Realistic UI Mockup: Earnly Live Portal Tables */}
+                    <div className="rounded-2xl border-2 border-muted bg-card p-4 sm:p-6 text-foreground space-y-5 shadow-sm border border-border">
+                      {/* Earnly Top Header */}
                       <div className="flex items-center justify-between border-b border-border pb-3 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 inline-block" />
-                          <span className="font-bold">Earnly Publisher Dashboard — Transaction History</span>
+                          <span className="font-bold text-sm">Earnly Dashboard — Real Transaction & Click Data</span>
                         </div>
-                        <span className="text-xs text-muted-foreground font-mono">Publisher ID: c7zko6s5mfo</span>
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          Merchant: Flipkart | Status: Approved
+                        </span>
                       </div>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs font-mono">
-                          <thead>
-                            <tr className="border-b border-border text-[11px] text-muted-foreground uppercase tracking-wider">
-                              <th className="py-2 px-3">Date</th>
-                              <th className="py-2 px-3">SubID (Tag)</th>
-                              <th className="py-2 px-3">Store</th>
-                              <th className="py-2 px-3">Order Amount</th>
-                              <th className="py-2 px-3">Commission Owed</th>
-                              <th className="py-2 px-3">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-border">
-                            <tr className="bg-emerald-500/[0.07] font-semibold">
-                              <td className="py-2.5 px-3 text-muted-foreground">Today, 14:32</td>
-                              <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-bold">u_cm7x89_a1b2</td>
-                              <td className="py-2.5 px-3">Amazon India</td>
-                              <td className="py-2.5 px-3">₹1,299.00</td>
-                              <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-extrabold">+₹80.00</td>
-                              <td className="py-2.5 px-3">
-                                <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
-                                  Approved
-                                </span>
-                              </td>
-                            </tr>
-                            <tr className="text-muted-foreground">
-                              <td className="py-2 px-3">Yesterday</td>
-                              <td className="py-2 px-3 font-mono">u_cm7a12_k9j8</td>
-                              <td className="py-2 px-3">Flipkart</td>
-                              <td className="py-2 px-3">₹2,499.00</td>
-                              <td className="py-2 px-3 font-bold">+₹140.00</td>
-                              <td className="py-2 px-3">
-                                <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
-                                  Approved
-                                </span>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
+                      {/* Earnly Table 1: All Transactions */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-foreground flex items-center gap-1.5">
+                            <ShoppingCart className="h-3.5 w-3.5 text-emerald-500" />
+                            1. All Transactions Table (From Your Earnly Screenshot):
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-mono">Filter: January 2024</span>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-border">
+                          <table className="w-full text-left text-xs font-mono">
+                            <thead className="bg-muted/50 border-b border-border text-[11px] text-muted-foreground uppercase tracking-wider">
+                              <tr>
+                                <th className="py-2 px-3">Date</th>
+                                <th className="py-2 px-3">Merchant</th>
+                                <th className="py-2 px-3">Amount</th>
+                                <th className="py-2 px-3">Expected By</th>
+                                <th className="py-2 px-3">Income</th>
+                                <th className="py-2 px-3">Status</th>
+                                <th className="py-2 px-3 text-right">Ref ID</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              <tr className="bg-emerald-500/[0.08] font-bold">
+                                <td className="py-2.5 px-3 text-foreground">18 Jan, 2024</td>
+                                <td className="py-2.5 px-3">Flipkart</td>
+                                <td className="py-2.5 px-3">₹ 1349</td>
+                                <td className="py-2.5 px-3 text-muted-foreground">30 Apr, 2024</td>
+                                <td className="py-2.5 px-3 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">₹ 53.60</td>
+                                <td className="py-2.5 px-3">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold inline-flex items-center gap-1">
+                                    <CheckCircle2 className="h-3 w-3" /> Approved
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-mono font-extrabold border border-emerald-500/40">
+                                    0C15F6BAB
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr className="text-muted-foreground opacity-60">
+                                <td className="py-2 px-3">08 Jan, 2024</td>
+                                <td className="py-2 px-3">Flipkart</td>
+                                <td className="py-2 px-3">₹ 3099</td>
+                                <td className="py-2 px-3">30 Apr, 2024</td>
+                                <td className="py-2 px-3 text-rose-500 font-bold">₹ 0</td>
+                                <td className="py-2 px-3">
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold">
+                                    ✕ Cancelled
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-right font-mono">2865ADC9A</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Earnly Table 2: Click History */}
+                      <div className="space-y-2 pt-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-foreground flex items-center gap-1.5">
+                            <MousePointerClick className="h-3.5 w-3.5 text-blue-500" />
+                            2. Click History Table (Matching Proof):
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-mono">Filter: January 2024</span>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-border">
+                          <table className="w-full text-left text-xs font-mono">
+                            <thead className="bg-muted/50 border-b border-border text-[11px] text-muted-foreground uppercase tracking-wider">
+                              <tr>
+                                <th className="py-2 px-3">Date</th>
+                                <th className="py-2 px-3">Merchant</th>
+                                <th className="py-2 px-3 text-right">Ref ID</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              <tr className="bg-blue-500/[0.08] font-bold">
+                                <td className="py-2.5 px-3 text-foreground">17 Jan, 2024</td>
+                                <td className="py-2.5 px-3">Flipkart</td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono font-extrabold border border-blue-500/40 inline-flex items-center gap-1">
+                                    <span>0C15F6BAB</span>
+                                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500 text-white font-sans font-bold">Matched Sale!</span>
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr className="text-muted-foreground">
+                                <td className="py-2 px-3">17 Jan, 2024</td>
+                                <td className="py-2 px-3">Flipkart</td>
+                                <td className="py-2 px-3 text-right font-mono">CF64243AB</td>
+                              </tr>
+                              <tr className="text-muted-foreground">
+                                <td className="py-2 px-3">16 Jan, 2024</td>
+                                <td className="py-2 px-3">Flipkart</td>
+                                <td className="py-2 px-3 text-right font-mono">B2D004EFB</td>
+                              </tr>
+                              <tr className="text-muted-foreground opacity-60">
+                                <td className="py-2 px-3">08 Jan, 2024</td>
+                                <td className="py-2 px-3">Flipkart</td>
+                                <td className="py-2 px-3 text-right font-mono">2865ADC9A</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
 
@@ -1589,19 +1674,19 @@ export function AdminView({ metrics }: AdminViewProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2">
                         <strong className="text-foreground block font-bold text-sm">
-                          🔍 How Admin Verifies the Item Was Purchased ONLY on Our Platform:
+                          🔍 What Earnly&apos;s Ref ID &ldquo;0C15F6BAB&rdquo; Really Means:
                         </strong>
                         <p className="text-muted-foreground leading-relaxed">
-                          Notice the SubID column above: <code className="px-1 py-0.5 rounded bg-muted font-mono font-bold text-foreground">u_cm7x89_a1b2</code>. This code was generated exclusively by CashDeals. If a user buys directly on Amazon without our link, Amazon will <strong>never</strong> record that SubID in your Earnly report. The presence of that SubID in Earnly is mathematical proof the user clicked through CashDeals!
+                          When a user clicks on Flipkart from CashDeals, Earnly generates a 9-character hex tag (<code className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-bold">0C15F6BAB</code>) in Click History on <strong>17 Jan</strong>. When the shopper checks out on Flipkart on <strong>18 Jan</strong>, Earnly records the sale with the exact same <code className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-bold">0C15F6BAB</code> and confirms <strong className="text-foreground">₹53.60 Income</strong>!
                         </p>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2">
                         <strong className="text-foreground block font-bold text-sm">
-                          🛡️ Return Window Protection (Zero Loss Guarantee):
+                          🛡️ Why Earnly Only Shows Ref ID (Zero Loss Rule):
                         </strong>
                         <p className="text-muted-foreground leading-relaxed">
-                          If the customer cancels the order or returns the earbuds within 7 days, Amazon automatically marks the status as <strong>CANCELLED</strong> and does not credit the ₹80. You only verify and reward orders with status <strong>Approved</strong>. Thus, you will never pay cashback out of your own pocket.
+                          Flipkart and Indian privacy regulations never disclose the customer&apos;s personal phone or bank details to affiliates. Instead, the <strong className="text-foreground">Ref ID</strong> is the cryptographic order receipt. Notice the row with <code className="font-mono">2865ADC9A</code> where Status is <strong>Cancelled</strong> and Income is <strong>₹0</strong>: you simply ignore cancelled rows, guaranteeing you never lose money!
                         </p>
                       </div>
                     </div>
@@ -1617,7 +1702,7 @@ export function AdminView({ metrics }: AdminViewProps) {
                           SCENE 4 OF 6
                         </span>
                         <h3 className="text-lg font-bold text-foreground">
-                          Admin Verifies Order & Locks Platform Profit
+                          Admin Matches Ref ID 0C15F6BAB & Credits Cashback
                         </h3>
                       </div>
                       <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-xl">
@@ -1630,23 +1715,34 @@ export function AdminView({ metrics }: AdminViewProps) {
                       <div className="flex items-center justify-between border-b border-border pb-3 text-xs">
                         <div className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          <span className="font-bold">CashDeals Manual Order Verifier</span>
+                          <span className="font-bold">CashDeals Order Verification Form</span>
                         </div>
                         <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                          Automatic User Matching Active
+                          Live Data Matching Active
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
-                        <div className="space-y-1 sm:col-span-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="space-y-1">
                           <label className="text-[11px] font-bold text-muted-foreground block">
-                            Enter SubID from Earnly Report:
+                            Earnly Ref ID:
                           </label>
                           <input
                             type="text"
                             readOnly
-                            value="u_cm7x89_a1b2"
-                            className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 font-mono font-bold text-foreground"
+                            value="0C15F6BAB"
+                            className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/[0.05] px-3 py-2 font-mono font-extrabold text-emerald-700 dark:text-emerald-300"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-muted-foreground block">
+                            Assign To User:
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value="Rahul Sharma (rahul@gmail.com)"
+                            className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 font-bold text-foreground"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1656,18 +1752,43 @@ export function AdminView({ metrics }: AdminViewProps) {
                           <input
                             type="text"
                             readOnly
-                            value="Amazon"
+                            value="Flipkart"
                             className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 font-bold text-foreground"
                           />
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-muted-foreground block">
-                            Earnly Commission (₹):
+                            Order Sale Amount:
                           </label>
                           <input
                             type="text"
                             readOnly
-                            value="₹80.00"
+                            value="₹ 1349.00"
+                            className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 font-mono font-bold text-foreground"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-muted-foreground block">
+                            Earnly Income (Commission):
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value="₹ 53.60"
+                            className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono font-extrabold text-emerald-600 dark:text-emerald-400"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-muted-foreground block">
+                            User Cashback Reward (30%):
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value="₹ 16.08"
                             className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono font-extrabold text-emerald-600 dark:text-emerald-400"
                           />
                         </div>
@@ -1681,17 +1802,17 @@ export function AdminView({ metrics }: AdminViewProps) {
                             Guaranteed Profit Split Breakdown:
                           </span>
                           <p className="text-[11px] text-muted-foreground">
-                            Target User: <strong className="text-foreground font-mono">rahul@gmail.com</strong> (matched from SubID)
+                            Earnly pays you: <strong className="text-foreground font-mono">₹53.60</strong>
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
                             <span className="text-[10px] text-muted-foreground block">Your Admin Profit (70%)</span>
-                            <span className="text-sm font-extrabold text-foreground">₹56.00</span>
+                            <span className="text-sm font-extrabold text-foreground">₹37.52</span>
                           </div>
                           <div className="text-right">
                             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block">User Cashback (30%)</span>
-                            <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">₹24.00</span>
+                            <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">₹16.08</span>
                           </div>
                           <button
                             type="button"
@@ -1705,21 +1826,22 @@ export function AdminView({ metrics }: AdminViewProps) {
 
                     {/* Explanatory Storyboard Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2">
-                        <strong className="text-foreground block font-bold text-sm">
-                          ⚡ 1-Click Verification:
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-900 dark:text-emerald-300 space-y-2">
+                        <strong className="text-emerald-700 dark:text-emerald-200 block font-bold text-sm">
+                          ⚡ 2 Easy Ways Admin Matches Ref ID 0C15F6BAB to Rahul:
                         </strong>
-                        <p className="text-muted-foreground leading-relaxed">
-                          You do not need to look up who <code className="font-mono font-bold">u_cm7x89_a1b2</code> belongs to! Simply paste the SubID from your Earnly dashboard into the form and enter your commission. CashDeals instantly detects the user account and credits their wallet with their ₹24 cashback.
-                        </p>
+                        <ul className="list-disc pl-4 space-y-1 leading-relaxed">
+                          <li><strong>Way 1 (Fastest 1-Click):</strong> Open the <strong>Shopper Clicks</strong> tab in CashDeals Admin. See Rahul clicked Flipkart on 17 Jan, and click <code className="px-1 py-0.5 rounded bg-emerald-500/20 font-bold">+ Match & Verify</code>. The form pre-fills in 1 second!</li>
+                          <li><strong>Way 2 (Manual):</strong> Type <code className="font-mono font-bold">0C15F6BAB</code> in the Ref ID field, select Rahul from the user dropdown, type ₹53.60, and tap Verify.</li>
+                        </ul>
                       </div>
 
                       <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2">
                         <strong className="text-foreground block font-bold text-sm">
-                          💼 Bulk Verification via CSV:
+                          💰 100% Guaranteed Profit Math:
                         </strong>
                         <p className="text-muted-foreground leading-relaxed">
-                          Have 50 orders in a month? Don&apos;t do it one by one! Click &ldquo;Download Report&rdquo; in Earnly to get a CSV file, then drag and drop it into the <strong>Verify Orders & CSV</strong> tab. CashDeals reconciles all 50 orders in 2 seconds automatically.
+                          You receive ₹53.60 into your Earnly account from Flipkart. You credit ₹16.08 to Rahul&apos;s CashDeals wallet. <strong className="text-foreground">₹37.52 remains pure net profit for you</strong>. The user is happy with their discount, and you earn reliable passive profit on every verified purchase!
                         </p>
                       </div>
                     </div>
@@ -1992,8 +2114,8 @@ export function AdminView({ metrics }: AdminViewProps) {
                       </div>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Shopper Interface</span>
-                        <h4 className="text-sm font-bold text-foreground">User Pastes Link on CashDeals</h4>
-                        <p className="text-xs text-muted-foreground">Product URL: https://amazon.in/dp/... → CashDeals assigns unique SubID <code className="font-mono font-bold text-foreground">u_cm7x89_a1b2</code></p>
+                        <h4 className="text-sm font-bold text-foreground">User Clicks / Converts Flipkart Deal on CashDeals</h4>
+                        <p className="text-xs text-muted-foreground">User Rahul (<code className="font-mono font-bold text-foreground">rahul@gmail.com</code>) clicks Flipkart product link on 17 Jan → CashDeals logs click in database.</p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-xl text-[10px] font-mono bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">
@@ -2014,12 +2136,12 @@ export function AdminView({ metrics }: AdminViewProps) {
                       </div>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Merchant Gateway</span>
-                        <h4 className="text-sm font-bold text-foreground">User Buys & Completes Payment on Amazon / Flipkart</h4>
-                        <p className="text-xs text-muted-foreground">Amazon records payment: ₹1,299 via UPI. Affiliate engine tags cart with <code className="font-mono font-bold text-foreground">ascsubtag=u_cm7x89_a1b2</code></p>
+                        <h4 className="text-sm font-bold text-foreground">User Buys on Flipkart (Order Value: ₹ 1349.00)</h4>
+                        <p className="text-xs text-muted-foreground">User completes ₹1349 payment. Earnly registers the click in Click History under <code className="font-mono font-bold text-foreground">Ref ID: 0C15F6BAB</code>.</p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-xl text-[10px] font-mono bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold whitespace-nowrap">
-                      Amazon Affiliate Tagged
+                      Earnly Tagged: 0C15F6BAB
                     </span>
                   </div>
 
@@ -2036,12 +2158,12 @@ export function AdminView({ metrics }: AdminViewProps) {
                       </div>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Affiliate Clearing</span>
-                        <h4 className="text-sm font-bold text-foreground">Earnly.in Reports Confirmed Sale & ₹80 Commission</h4>
-                        <p className="text-xs text-muted-foreground">After 7-day return period clears, Earnly logs: <code className="font-mono font-bold text-foreground">u_cm7x89_a1b2 | ₹1,299 GMV | ₹80 Commission | Approved</code></p>
+                        <h4 className="text-sm font-bold text-foreground">Earnly Confirms Sale: ₹53.60 Income under Ref ID 0C15F6BAB</h4>
+                        <p className="text-xs text-muted-foreground">Earnly All Transactions table logs: <code className="font-mono font-bold text-foreground">18 Jan | Flipkart | ₹ 1349 | Income: ₹ 53.60 | Status: Approved | Ref ID: 0C15F6BAB</code></p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-xl text-[10px] font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold whitespace-nowrap">
-                      Earnly Transaction Log
+                      Earnly Income: ₹53.60
                     </span>
                   </div>
 
@@ -2058,12 +2180,12 @@ export function AdminView({ metrics }: AdminViewProps) {
                       </div>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Platform Admin Center</span>
-                        <h4 className="text-sm font-bold text-foreground">Admin Enters SubID & Executes Guaranteed Profit Split</h4>
-                        <p className="text-xs text-muted-foreground">Platform retains <strong>₹56.00 pure profit</strong> (70%). User receives <strong>₹24.00 cashback</strong> credited to wallet.</p>
+                        <h4 className="text-sm font-bold text-foreground">Admin Matches Ref ID 0C15F6BAB to Rahul & Executes Split</h4>
+                        <p className="text-xs text-muted-foreground">Platform keeps <strong>₹37.52 pure net profit</strong> (70%). Rahul receives <strong>₹16.08 cashback</strong> credited to his wallet.</p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 rounded-xl text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">
-                      Wallet Ledger Credited
+                      Cashback Credited: +₹16.08
                     </span>
                   </div>
 
@@ -2168,21 +2290,21 @@ export function AdminView({ metrics }: AdminViewProps) {
                 <div className="p-5 rounded-3xl border-2 border-blue-500/40 bg-blue-500/[0.05] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-700 dark:text-blue-300">
-                      CORE PROBLEM SOLVED
+                      EARNLY REF ID MATCHING
                     </span>
                     <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h4 className="font-extrabold text-sm text-foreground">
-                    How does the admin verify the item was clicked ONLY on our platform?
+                    How do I match Earnly&apos;s Ref ID (0C15F6BAB) to the specific user?
                   </h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Via the <strong>SubID</strong>! Every link generated on CashDeals creates an exclusive tag like <code className="font-mono font-bold">u_cm7x89_a1b2</code> recorded in our <code className="font-mono font-bold">clicks</code> table. When Earnly or Amazon reports an order with that SubID, it is mathematically impossible to have come from anywhere else!
+                    In your Earnly dashboard, Ref ID <code className="font-mono font-bold text-foreground">0C15F6BAB</code> shows a click on <strong>17 Jan</strong> for Flipkart. In CashDeals Admin &gt; <strong>Shopper Clicks</strong> tab, you see Rahul clicked Flipkart on 17 Jan! Simply click <code className="px-1 py-0.5 rounded bg-emerald-500/20 font-bold">+ Match & Verify</code> next to his name, type Earnly&apos;s ₹53.60 income, and tap Verify. Rahul gets ₹16.08, and you keep ₹37.52!
                   </p>
                   <button
                     onClick={() => setActiveTab("clicks")}
                     className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline pt-1"
                   >
-                    View Shopper Clicks Table <ArrowRight className="h-3 w-3" />
+                    View Shopper Clicks Tab <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
               </div>
