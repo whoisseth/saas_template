@@ -230,6 +230,37 @@ export function AdminView({ metrics }: AdminViewProps) {
     }
   }
 
+  async function handleSimulateQuickOrder(storeName: string, orderAmt: number, commAmt: number, rewardAmt: number) {
+    const target = manualSubId.trim() || usersList[0]?.email || "utkarshseth2019@gmail.com";
+    setIsVerifyingManual(true);
+    try {
+      const res = await fetch("/api/admin/verify-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmailOrId: target,
+          storeName,
+          orderNumber: `SIM_${storeName.toUpperCase()}_${Date.now().toString().slice(-6)}`,
+          orderAmount: orderAmt,
+          commissionAmount: commAmt,
+          userRewardAmount: rewardAmt,
+        }),
+      });
+
+      const data = (await res.json()) as { success?: boolean; message?: string; error?: string };
+      if (res.ok && data.success) {
+        toast.success(`🎉 Simulated ${storeName} Purchase! ₹${rewardAmt} credited to ${target}. Check your Wallet!`);
+        fetchOverview();
+      } else {
+        toast.error(data.error || "Failed to simulate test order");
+      }
+    } catch {
+      toast.error("Network error during test simulation");
+    } finally {
+      setIsVerifyingManual(false);
+    }
+  }
+
   async function handleInspectUser(userId: string) {
     setIsLoadingInspector(true);
     try {
@@ -838,6 +869,64 @@ export function AdminView({ metrics }: AdminViewProps) {
       {/* TAB 4: MANUAL ORDER VERIFICATION & EARNLY CSV RECONCILIATION */}
       {activeTab === "reconcile" && (
         <div className="space-y-6">
+          {/* Developer Testing Sandbox (1-Click Simulation Without Real Purchases) */}
+          <div className="rounded-3xl border border-indigo-500/20 bg-indigo-500/[0.03] p-5 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
+                  🧪
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    Developer Test Sandbox (Instant Verification Without Real Purchases)
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Click any button below to instantly simulate a completed purchase. CashDeals immediately verifies the order, credits wallet cashback, and logs full audit records!
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/wallet"
+                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground flex items-center gap-1 transition-colors flex-shrink-0"
+              >
+                <span>Open My Wallet</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isVerifyingManual}
+                onClick={() => handleSimulateQuickOrder("Amazon", 1000, 75, 25)}
+                className="py-2 px-3.5 rounded-xl font-bold bg-background hover:bg-muted border border-border text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 text-foreground"
+              >
+                <span>🛒 Simulate Amazon Order</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-bold">+₹25 Cashback</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isVerifyingManual}
+                onClick={() => handleSimulateQuickOrder("Flipkart", 2500, 180, 60)}
+                className="py-2 px-3.5 rounded-xl font-bold bg-background hover:bg-muted border border-border text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 text-foreground"
+              >
+                <span>⚡ Simulate Flipkart Order</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-mono font-bold">+₹60 Cashback (Unlocks UPI)</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isVerifyingManual}
+                onClick={() => handleSimulateQuickOrder("Myntra", 1500, 120, 40)}
+                className="py-2 px-3.5 rounded-xl font-bold bg-background hover:bg-muted border border-border text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95 text-foreground"
+              >
+                <span>👗 Simulate Myntra Order</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-600 dark:text-pink-400 font-mono font-bold">+₹40 Cashback</span>
+              </button>
+            </div>
+          </div>
+
           {/* Section 1: Manual SubID / Order Verification */}
           <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.02] p-6 shadow-sm space-y-5">
             <div className="flex items-center gap-2.5">
