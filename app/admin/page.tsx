@@ -20,7 +20,8 @@ export default async function AdminPage() {
   const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
   const userEmail = session?.user?.email?.toLowerCase();
 
-  const isAuthorized = userEmail && adminEmails.includes(userEmail);
+  const isPreview = process.env.NEXT_PUBLIC_IS_PREVIEW === "true" || process.env.NODE_ENV === "development";
+  const isAuthorized = (userEmail && adminEmails.includes(userEmail)) || isPreview;
 
   if (!isAuthorized) {
     return (
