@@ -197,10 +197,12 @@ export function AdminView({ metrics }: AdminViewProps) {
 
   // Manual Order Verification state
   const [manualSubId, setManualSubId] = useState("");
-  const [manualStore, setManualStore] = useState("Amazon");
+  const [manualUserEmail, setManualUserEmail] = useState("");
+  const [manualStore, setManualStore] = useState("Flipkart");
   const [manualOrderNum, setManualOrderNum] = useState("");
-  const [manualCommission, setManualCommission] = useState("75");
-  const [manualReward, setManualReward] = useState("20");
+  const [manualOrderAmount, setManualOrderAmount] = useState("1349");
+  const [manualCommission, setManualCommission] = useState("53.60");
+  const [manualReward, setManualReward] = useState("16.08");
   const [isVerifyingManual, setIsVerifyingManual] = useState(false);
 
   // Storyboard & Flowchart state
@@ -210,8 +212,9 @@ export function AdminView({ metrics }: AdminViewProps) {
 
   async function handleManualVerifyOrder(e: React.FormEvent) {
     e.preventDefault();
-    if (!manualSubId.trim()) {
-      toast.error("Please enter a SubID or User Email");
+    const userTarget = manualUserEmail.trim() || manualSubId.trim();
+    if (!userTarget) {
+      toast.error("Please enter or select a User Email, or enter a SubID");
       return;
     }
 
@@ -222,11 +225,12 @@ export function AdminView({ metrics }: AdminViewProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subId: manualSubId.trim().startsWith("u_") ? manualSubId.trim() : undefined,
-          userEmailOrId: !manualSubId.trim().startsWith("u_") ? manualSubId.trim() : undefined,
+          userEmailOrId: userTarget,
           storeName: manualStore,
           orderNumber: manualOrderNum.trim() || undefined,
-          commissionAmount: parseFloat(manualCommission) || 75,
-          userRewardAmount: parseFloat(manualReward) || 20,
+          orderAmount: parseFloat(manualOrderAmount) || 1000,
+          commissionAmount: parseFloat(manualCommission) || 53.60,
+          userRewardAmount: parseFloat(manualReward) || 16.08,
         }),
       });
 
@@ -1002,23 +1006,53 @@ export function AdminView({ metrics }: AdminViewProps) {
 
             <form onSubmit={handleManualVerifyOrder} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Field 1: Earnly Ref ID or Amazon SubID */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-foreground">
-                    SubID or User Email <span className="text-rose-500">*</span>
+                  <label className="text-[11px] font-bold text-foreground flex items-center justify-between">
+                    <span>Earnly Ref ID or SubID</span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">e.g. 0C15F6BAB</span>
                   </label>
                   <input
                     type="text"
                     required
-                    value={manualSubId}
-                    onChange={(e) => setManualSubId(e.target.value)}
-                    placeholder="e.g. u_cm7x... or buyer@gmail.com"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                    value={manualOrderNum || manualSubId}
+                    onChange={(e) => {
+                      const val = e.target.value.trim();
+                      setManualOrderNum(val);
+                      if (val.startsWith("u_")) setManualSubId(val);
+                      else setManualSubId("");
+                    }}
+                    placeholder="e.g. 0C15F6BAB (from Earnly table)"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold"
                   />
                   <p className="text-[10px] text-muted-foreground">
-                    From your Amazon tag or Earnly report
+                    From Earnly table column: <strong>Ref ID</strong>
                   </p>
                 </div>
 
+                {/* Field 2: Select Shopper User */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">
+                    Assign To User <span className="text-rose-500">*</span>
+                  </label>
+                  <select
+                    value={manualUserEmail}
+                    onChange={(e) => setManualUserEmail(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                  >
+                    <option value="">-- Choose User Account --</option>
+                    {usersList.map((u) => (
+                      <option key={u.id} value={u.email}>
+                        {u.name ? `${u.name} (${u.email})` : u.email}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground">
+                    Select who gets the cashback credit
+                  </p>
+                </div>
+
+                {/* Field 3: Store Platform */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-foreground">Store Platform</label>
                   <select
@@ -1026,32 +1060,38 @@ export function AdminView({ metrics }: AdminViewProps) {
                     onChange={(e) => setManualStore(e.target.value)}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                   >
-                    <option value="Amazon">Amazon.in</option>
                     <option value="Flipkart">Flipkart</option>
+                    <option value="Amazon">Amazon.in</option>
                     <option value="Myntra">Myntra</option>
                     <option value="Ajio">Ajio</option>
                     <option value="Other">Other / Earnly</option>
                   </select>
-                  <p className="text-[10px] text-muted-foreground">Merchant of purchase</p>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-foreground">Order ID / Ref (Optional)</label>
-                  <input
-                    type="text"
-                    value={manualOrderNum}
-                    onChange={(e) => setManualOrderNum(e.target.value)}
-                    placeholder="e.g. 402-819281-91823"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
-                  />
-                  <p className="text-[10px] text-muted-foreground">For user audit trail</p>
+                  <p className="text-[10px] text-muted-foreground">Merchant from Earnly</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Row 2: Amounts & Profit Split */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-foreground">
-                    Affiliate Commission You Received (₹)
+                    Order Sale Amount (₹)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={manualOrderAmount}
+                    onChange={(e) => setManualOrderAmount(e.target.value)}
+                    placeholder="1349.00"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    From Earnly table: <strong>Amount (e.g. ₹1349)</strong>
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-foreground">
+                    Earnly Income / Commission (₹) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -1063,34 +1103,32 @@ export function AdminView({ metrics }: AdminViewProps) {
                       setManualCommission(comm);
                       const parsed = parseFloat(comm);
                       if (!isNaN(parsed) && parsed > 0) {
-                        // Auto suggest ~27% reward to user
-                        const suggested = Math.max(5, Math.round(parsed * 0.27));
-                        setManualReward(suggested.toString());
+                        const userShare = (parsed * 0.3).toFixed(2);
+                        setManualReward(userShare);
                       }
                     }}
-                    placeholder="75.00"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+                    placeholder="53.60"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-emerald-600 dark:text-emerald-400"
                   />
                   <p className="text-[10px] text-muted-foreground">
-                    Actual commission earned by CashDeals (you keep ≥70%)
+                    From Earnly table: <strong>Income (e.g. ₹53.60)</strong>
                   </p>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-foreground">
-                    Cashback Reward Credited to User (₹)
+                    User Cashback Reward (₹)
                   </label>
                   <input
                     type="number"
                     step="0.01"
-                    min="1"
                     value={manualReward}
                     onChange={(e) => setManualReward(e.target.value)}
-                    placeholder="20.00"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-600 dark:text-emerald-400"
+                    placeholder="16.08"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-emerald-600 dark:text-emerald-400"
                   />
                   <p className="text-[10px] text-muted-foreground">
-                    Cashback credited directly into user&apos;s withdrawable wallet
+                    Credited to user (You keep: ₹{(Math.max(0, (parseFloat(manualCommission) || 0) - (parseFloat(manualReward) || 0))).toFixed(2)})
                   </p>
                 </div>
               </div>
@@ -1123,21 +1161,30 @@ export function AdminView({ metrics }: AdminViewProps) {
               </div>
             </form>
 
-            <div className="rounded-2xl border border-border bg-muted/30 p-3.5 text-xs text-muted-foreground space-y-1">
-              <p className="font-bold text-foreground flex items-center gap-1">
-                💡 How You Verify User Orders from Your Affiliate Accounts:
+            <div className="rounded-2xl border border-border bg-muted/30 p-4 text-xs text-muted-foreground space-y-2">
+              <p className="font-bold text-foreground flex items-center gap-1.5 text-sm">
+                💡 How to Match Earnly&apos;s &ldquo;Ref ID&rdquo; (e.g. 0C15F6BAB) with Your CashDeals User:
               </p>
-              <ul className="list-disc list-inside space-y-0.5 text-[11px] pl-1">
-                <li>
-                  <strong className="text-foreground">Amazon Associates:</strong> Go to Reports &rarr; Earnings Report &rarr; Tracking ID / SubID. Copy the <code className="px-1 py-0.5 rounded bg-muted font-mono font-bold">u_...</code> SubID.
-                </li>
-                <li>
-                  <strong className="text-foreground">Earnly.in:</strong> Open your Earnly Dashboard &rarr; Transactions. Copy the SubID or User Tag.
-                </li>
-                <li>
-                  Paste it in the box above, review the commission and reward, and hit <strong className="text-emerald-600 dark:text-emerald-400">Verify Order</strong>. Done!
-                </li>
-              </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3 rounded-xl bg-background border border-border space-y-1">
+                  <strong className="text-foreground block text-xs">1. Look at Earnly:</strong>
+                  <p className="text-[11px] leading-relaxed">
+                    In your Earnly &ldquo;All Transactions&rdquo; table, copy the <strong>Ref ID</strong> (e.g. <code className="font-mono font-bold text-foreground">0C15F6BAB</code>) and the <strong>Income</strong> (e.g. <code className="font-mono font-bold text-foreground">₹53.60</code>).
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-background border border-border space-y-1">
+                  <strong className="text-foreground block text-xs">2. Check Shopper Clicks:</strong>
+                  <p className="text-[11px] leading-relaxed">
+                    Open the <strong>Shopper Clicks</strong> tab above to see which user clicked Flipkart around that date/time (e.g. Rahul on 17 Jan).
+                  </p>
+                </div>
+                <div className="p-3 rounded-xl bg-background border border-border space-y-1">
+                  <strong className="text-foreground block text-xs">3. Enter & Verify:</strong>
+                  <p className="text-[11px] leading-relaxed">
+                    Paste <code className="font-mono font-bold text-foreground">0C15F6BAB</code> above, pick Rahul from the dropdown, enter ₹53.60, and tap <strong>Verify Order</strong>. Rahul gets ₹16.08, and you keep ₹37.52!
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
